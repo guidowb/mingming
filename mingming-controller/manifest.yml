@@ -1,0 +1,9 @@
+---
+applications:
+- name: mingming-controller
+  path: build/libs/mingming-0.0.1-SNAPSHOT.jar
+  memory: 512M
+  host: mingming
+  timeout: 120
+  services:
+  - mingming-db

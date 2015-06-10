@@ -1,0 +1,1 @@
+include 'mingming-controller', 'mingming-worker'

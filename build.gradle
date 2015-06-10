@@ -1,0 +1,45 @@
+subprojects {
+    buildscript {
+        ext {
+            springBootVersion = '1.2.3.RELEASE'
+        }
+        repositories {
+            mavenCentral()
+        }
+        dependencies {
+            classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}") 
+            classpath("io.spring.gradle:dependency-management-plugin:0.5.1.RELEASE")
+        }
+    }
+
+    apply plugin: 'java'
+    apply plugin: 'eclipse'
+    apply plugin: 'idea'
+
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    repositories {
+        mavenCentral()
+    }
+
+    eclipse {
+        classpath {
+             containers.remove('org.eclipse.jdt.launching.JRE_CONTAINER')
+             containers 'org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8'
+        }
+    }
+}
+
+project(':mingming-worker') {
+}
+
+project(':mingming-controller') {
+    dependencies {
+        compile project(':mingming-worker')
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.3'
+}
