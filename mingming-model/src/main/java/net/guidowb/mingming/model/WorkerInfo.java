@@ -23,6 +23,8 @@ public class WorkerInfo {
 	private @JsonIgnore Date lastUpdate;
 	private @JsonIgnore @ManyToMany Set<Work> assignedWork;
 
+	public WorkerInfo() {}
+
 	public WorkerInfo(Environment env) {
 	    this.instanceId = env.getProperty("vcap.application.instance_id", "local");
 	    this.applicationName = env.getProperty("vcap.application.application_name", "unknown");

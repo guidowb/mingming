@@ -52,7 +52,8 @@ public class MingMingWorker implements CommandLineRunner {
 	private void register() {
 		if (workerInfo == null) workerInfo = new WorkerInfo(env);
 		RestTemplate controller = new RestTemplate();
-		this.workerUri = controller.postForLocation(controllerUri.resolve("/workers"), workerInfo);
+		URI workersUri = controllerUri.resolve("/workers/");
+		this.workerUri = workersUri.resolve(controller.postForLocation(workersUri, workerInfo));
 	}
 
 	private void updateWork() {

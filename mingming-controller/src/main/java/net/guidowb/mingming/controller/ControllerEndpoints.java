@@ -36,13 +36,18 @@ public class ControllerEndpoints {
 		worker = workerRepository.save(worker);
 		
 	    HttpHeaders headers = new HttpHeaders();
-	    headers.setLocation(URI.create("/workers").resolve(worker.getId()));
+	    headers.setLocation(URI.create(worker.getId()));
 	    return new ResponseEntity<Void>(headers, HttpStatus.CREATED);
 	}
 
 	@RequestMapping(value="/workers", method=RequestMethod.GET)
 	public Iterable<WorkerInfo> listWorkers() {
 		return workerRepository.findAll();
+	}
+
+	@RequestMapping(value="/workers/{workerId}", method=RequestMethod.GET)
+	public WorkerInfo getWorker(@PathVariable String workerId) {
+		return workerRepository.findOne(workerId);
 	}
 
 	@RequestMapping(value="/workers/{workerId}/work", method=RequestMethod.GET)
