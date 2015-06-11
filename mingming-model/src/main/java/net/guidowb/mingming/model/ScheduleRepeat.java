@@ -4,11 +4,17 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import javax.persistence.Entity;
+import javax.persistence.Transient;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+@Entity
 public class ScheduleRepeat extends Schedule {
 
 	private Long period;
 	private TimeUnit unit;
-	private ScheduledFuture<?> future;
+	private @Transient @JsonIgnore ScheduledFuture<?> future;
 
 	protected ScheduleRepeat() {}
 

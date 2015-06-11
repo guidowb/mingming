@@ -3,7 +3,9 @@ package net.guidowb.mingming.model;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import javax.persistence.Embeddable;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -14,9 +16,10 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
     @JsonSubTypes.Type(value = ScheduleOnce.class, name = "once"),
     @JsonSubTypes.Type(value = ScheduleRepeat.class, name = "repeat")
 })
-@Embeddable
+@Entity
 public abstract class Schedule {
 
+	private @Id @GeneratedValue Long id;
 	protected abstract void schedule(Work work, ScheduledExecutorService service);
 	protected void cancel() {};
 	
@@ -25,5 +28,5 @@ public abstract class Schedule {
 
 	// To work around Java's type erasure when constructing generic lists
 	@JsonProperty("class")
-	public String getClassname() { return this.getClass().getSimpleName().toLowerCase(); }
+	public String getClassname() { return this.getClass().getSimpleName().replaceFirst("Schedule", "").toLowerCase(); }
 }

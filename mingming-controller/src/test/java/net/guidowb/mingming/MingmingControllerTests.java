@@ -1,10 +1,15 @@
 package net.guidowb.mingming;
 
 import static org.junit.Assert.*;
+
 import java.net.URI;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import net.guidowb.mingming.MingMingController;
+import net.guidowb.mingming.model.Schedule;
+import net.guidowb.mingming.model.ScheduleOnce;
+import net.guidowb.mingming.model.ScheduleRepeat;
 import net.guidowb.mingming.model.Work;
 import net.guidowb.mingming.model.WorkerInfo;
 import net.guidowb.mingming.work.Ping;
@@ -39,14 +44,6 @@ public class MingmingControllerTests {
 
 	@Test
 	public void contextLoads() {
-	}
-
-	@Test
-	public void correctlyUnmarshallsWorkSubclasses() {
-		RestTemplate template = new RestTemplate();
-		Work[] result = template.getForObject(serverURI.resolve("/work/test/subclasses"), Work[].class);
-		assertEquals(2, result.length);
-		assertEquals(Ping.class, result[0].getClass());
 	}
 
 	private static AtomicInteger workerIndex = new AtomicInteger();
@@ -97,8 +94,9 @@ public class MingmingControllerTests {
 		assertNull(workerOut.getAssignedWork());
 	}
 	
-	private Ping createPing() {
-		Ping ping = new Ping(null, serverURI.toString());
+	private Ping createPing() { return createPing(null); }
+	private Ping createPing(Schedule schedule) {
+		Ping ping = new Ping(schedule, serverURI.toString());
 		return ping;
 	}
 
@@ -115,12 +113,33 @@ public class MingmingControllerTests {
 	}
 
 	@Test
-	public void getWorkReturnsCorrectSubclass() {
+	public void getWorkReturnsCorrectSubclassForPing() {
 		Ping ping = createPing();
 		String id = postWork(ping);
 		RestTemplate template = new RestTemplate();
 		Work work = template.getForObject(serverURI.resolve("/work/").resolve(id), Work.class);
 		assertTrue(work instanceof Ping);
+	}
+
+	@Test
+	public void getWorkReturnsCorrectScheduleForOnce() {
+		Ping ping = createPing(Schedule.once());
+		String id = postWork(ping);
+		RestTemplate template = new RestTemplate();
+		Work work = template.getForObject(serverURI.resolve("/work/").resolve(id), Work.class);
+		assertTrue(work.getSchedule() instanceof ScheduleOnce);
+	}
+
+	@Test
+	public void getWorkReturnsCorrectScheduleForRepeat() {
+		Ping ping = createPing(Schedule.repeat(5L, TimeUnit.MINUTES));
+		String id = postWork(ping);
+		RestTemplate template = new RestTemplate();
+		Work work = template.getForObject(serverURI.resolve("/work/").resolve(id), Work.class);
+		assertTrue(work.getSchedule() instanceof ScheduleRepeat);
+		ScheduleRepeat repeat = (ScheduleRepeat) work.getSchedule();
+		assertEquals((Long) 5L, repeat.getPeriod());
+		assertEquals(TimeUnit.MINUTES, repeat.getUnit());
 	}
 
 	@Test

@@ -2,10 +2,12 @@ package net.guidowb.mingming.model;
 
 import java.util.concurrent.ScheduledExecutorService;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.OneToOne;
 
 import org.hibernate.annotations.GenericGenerator;
 
@@ -30,7 +32,7 @@ public abstract class Work implements Runnable {
     @GenericGenerator(name="UUID", strategy="net.guidowb.mingming.repositories.UUIDGenerator")
 	private String id;
 
-	private Schedule schedule;
+	private @OneToOne(cascade=CascadeType.ALL) Schedule schedule;
 
 	protected Work() {}
 

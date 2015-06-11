@@ -3,6 +3,9 @@ package net.guidowb.mingming.model;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import javax.persistence.Entity;
+
+@Entity
 public class ScheduleOnce extends Schedule {
 
 	protected ScheduleOnce() {}
