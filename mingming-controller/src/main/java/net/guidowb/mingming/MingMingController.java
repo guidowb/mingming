@@ -1,4 +1,4 @@
-package net.guidowb.mingming.controller;
+package net.guidowb.mingming;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;

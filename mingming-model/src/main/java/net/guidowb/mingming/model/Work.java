@@ -3,6 +3,9 @@ package net.guidowb.mingming.model;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 
+import javax.persistence.Entity;
+import javax.persistence.Id;
+
 import net.guidowb.mingming.work.Ping;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -15,9 +18,10 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
     @JsonSubTypes.Type(value = Work.class, name = "work"),
     @JsonSubTypes.Type(value = Ping.class, name = "ping")
 })
+@Entity
 public abstract class Work implements Runnable {
 
-	private String id;
+	private @Id String id;
 	private Schedule schedule;
 
 	protected Work() {}

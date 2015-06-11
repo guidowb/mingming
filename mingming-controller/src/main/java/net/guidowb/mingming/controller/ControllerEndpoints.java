@@ -10,6 +10,8 @@ import net.guidowb.mingming.model.Work;
 import net.guidowb.mingming.model.WorkerInfo;
 import net.guidowb.mingming.model.WorkerStatus;
 import net.guidowb.mingming.repositories.StatusRepository;
+import net.guidowb.mingming.repositories.WorkRepository;
+import net.guidowb.mingming.repositories.WorkerRepository;
 import net.guidowb.mingming.work.Ping;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,27 +27,28 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class ControllerEndpoints {
 
-	@Autowired private WorkerRegistry workerRegistry;
-	@Autowired private WorkRegistry workRegistry;
+	@Autowired private WorkerRepository workerRepository;
+	@Autowired private WorkRepository workRepository;
 	@Autowired private StatusRepository statusRepository;
 
 	@RequestMapping(value="/workers", method=RequestMethod.POST)
 	public ResponseEntity<?> registerWorker(@RequestBody WorkerInfo worker) {
-		String id = workerRegistry.register(worker);
+		worker = workerRepository.save(worker);
 		
 	    HttpHeaders headers = new HttpHeaders();
-	    headers.setLocation(URI.create("/workers").resolve(id));
+	    headers.setLocation(URI.create("/workers").resolve(worker.getId()));
 	    return new ResponseEntity<Void>(headers, HttpStatus.CREATED);
 	}
 
 	@RequestMapping(value="/workers", method=RequestMethod.GET)
 	public Iterable<WorkerInfo> listWorkers() {
-		return workerRegistry.list();
+		return workerRepository.findAll();
 	}
 
 	@RequestMapping(value="/workers/{workerId}/work", method=RequestMethod.GET)
 	public Iterable<Work> getInstructions(@PathVariable String workerId) {
-		return workRegistry.workForWorker(workerId);
+		WorkerInfo worker = workerRepository.findOne(workerId);
+		return worker.getAssignedWork();
 	}
 
 	@RequestMapping(value="/workers/{workerId}/status", method=RequestMethod.PUT)

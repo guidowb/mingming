@@ -3,6 +3,8 @@ package net.guidowb.mingming.model;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import javax.persistence.Embeddable;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -12,6 +14,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
     @JsonSubTypes.Type(value = ScheduleOnce.class, name = "once"),
     @JsonSubTypes.Type(value = ScheduleRepeat.class, name = "repeat")
 })
+@Embeddable
 public abstract class Schedule {
 
 	protected abstract void schedule(Work work, ScheduledExecutorService service);

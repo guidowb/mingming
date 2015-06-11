@@ -1,10 +1,10 @@
-package net.guidowb.mingming.controller;
+package net.guidowb.mingming;
 
 import static org.junit.Assert.*;
 
 import java.net.URI;
 
-import net.guidowb.mingming.controller.MingMingController;
+import net.guidowb.mingming.MingMingController;
 import net.guidowb.mingming.model.Work;
 import net.guidowb.mingming.work.Ping;
 
