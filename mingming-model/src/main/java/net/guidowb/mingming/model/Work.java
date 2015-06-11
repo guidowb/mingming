@@ -1,10 +1,13 @@
 package net.guidowb.mingming.model;
 
-import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+
+import org.hibernate.annotations.GenericGenerator;
 
 import net.guidowb.mingming.work.Ping;
 
@@ -21,13 +24,17 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @Entity
 public abstract class Work implements Runnable {
 
-	private @Id String id;
+	@Id
+    @Column(length=40)
+    @GeneratedValue(generator="UUID")
+    @GenericGenerator(name="UUID", strategy="net.guidowb.mingming.repositories.UUIDGenerator")
+	private String id;
+
 	private Schedule schedule;
 
 	protected Work() {}
 
 	protected Work(Schedule schedule) {
-		this.id = UUID.randomUUID().toString();
 		this.schedule = schedule;
 	}
 	

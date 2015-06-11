@@ -1,7 +1,6 @@
 package net.guidowb.mingming;
 
 import static org.junit.Assert.*;
-
 import java.net.URI;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -45,7 +44,7 @@ public class MingmingControllerTests {
 	@Test
 	public void correctlyUnmarshallsWorkSubclasses() {
 		RestTemplate template = new RestTemplate();
-		Work[] result = template.getForObject(serverURI.resolve("/work"), Work[].class);
+		Work[] result = template.getForObject(serverURI.resolve("/work/test/subclasses"), Work[].class);
 		assertEquals(2, result.length);
 		assertEquals(Ping.class, result[0].getClass());
 	}
@@ -84,6 +83,48 @@ public class MingmingControllerTests {
 	
 	@Test
 	public void getWorkerReturnsCorrectProperties() {
+		WorkerInfo workerIn = createWorker();
+		RestTemplate template = new RestTemplate();
+		URI location = postWorker(workerIn);
+		WorkerInfo workerOut = template.getForObject(location, WorkerInfo.class);
+		assertEquals(workerIn.getId(), workerOut.getId());
+		assertEquals(workerIn.getApplicationName(), workerOut.getApplicationName());
+		assertEquals(workerIn.getApplicationRoute(), workerOut.getApplicationRoute());
+		assertEquals(workerIn.getInstanceId(), workerOut.getInstanceId());
+		assertEquals(workerIn.getInstanceIndex(), workerOut.getInstanceIndex());
+		assertEquals(workerIn.getInstanceHost(), workerOut.getInstanceHost());
+		assertEquals(workerIn.getInstancePort(), workerOut.getInstancePort());
+		assertNull(workerOut.getAssignedWork());
+	}
+	
+	private Ping createPing() {
+		Ping ping = new Ping(null, serverURI.toString());
+		return ping;
+	}
+
+	private String postWork(Work work) {
+		RestTemplate template = new RestTemplate();
+		return template.postForLocation(serverURI.resolve("/work"), work).toString();
+	}
+
+	@Test
+	public void createWorkReturnsUUID() {
+		Work work = createPing();
+		String id = postWork(work);
+		assertTrue(id.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"));
+	}
+
+	@Test
+	public void getWorkReturnsCorrectSubclass() {
+		Ping ping = createPing();
+		String id = postWork(ping);
+		RestTemplate template = new RestTemplate();
+		Work work = template.getForObject(serverURI.resolve("/work/").resolve(id), Work.class);
+		assertTrue(work instanceof Ping);
+	}
+
+	@Test
+	public void assignedWorkIsIgnoredOnPost() {
 		WorkerInfo workerIn = createWorker();
 		RestTemplate template = new RestTemplate();
 		URI location = postWorker(workerIn);

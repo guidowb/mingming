@@ -2,6 +2,9 @@ package net.guidowb.mingming.work;
 
 import java.util.Date;
 
+import javax.persistence.Entity;
+import javax.persistence.Transient;
+
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -11,11 +14,12 @@ import net.guidowb.mingming.model.Work;
 import net.guidowb.mingming.model.WorkStatus;
 import net.guidowb.mingming.model.WorkerInfo;
 
+@Entity
 public class Ping extends Work {
 
 	private String url;
-	private RestTemplate restTemplate = null;
-	private PingStatus status;
+	private @Transient RestTemplate restTemplate = null;
+	private @Transient PingStatus status;
 
 	public class PingStatus extends WorkStatus {
 		Long numSuccesses;
