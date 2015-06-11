@@ -32,11 +32,14 @@ subprojects {
 }
 
 project(':mingming-worker') {
+    dependencies {
+        compile project(':mingming-model')
+    }
 }
 
 project(':mingming-controller') {
     dependencies {
-        compile project(':mingming-worker')
+        compile project(':mingming-model')
     }
 }
 

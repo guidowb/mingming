@@ -34,6 +34,8 @@ public class MingMingWorker implements CommandLineRunner {
 	private ScheduledExecutorService workerPool = Executors.newScheduledThreadPool(10);
 	private RestTemplate controller = new RestTemplate();
 
+	public String getId() { return workerInfo.getInstanceId(); }
+
 	public static void main(String[] args) {
         SpringApplication.run(MingMingWorker.class, args);
     }
@@ -70,10 +72,10 @@ public class MingMingWorker implements CommandLineRunner {
 		}
 	}
 
-	private void publishStatus() {
+	private void reportStatus() {
 		List<WorkStatus> workStatus = new ArrayList<WorkStatus>();
 		for (Work work : activeWork.values()) {
-			workStatus.add(work.getStatus());
+			workStatus.add(work.getStatus().setMetadata(this.getId(), work.getId()));
 		}
 		workerStatus.setWorkStatus(workStatus);
 		controller.put(workerUri.resolve("/status"), workerStatus);
@@ -84,7 +86,7 @@ public class MingMingWorker implements CommandLineRunner {
 			@Override
 			public void run() {
 				updateWork();
-				publishStatus();
+				reportStatus();
 			}	
 		}, 0, 5, TimeUnit.SECONDS);
 	}

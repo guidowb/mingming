@@ -9,6 +9,7 @@ import net.guidowb.mingming.model.Schedule;
 import net.guidowb.mingming.model.Work;
 import net.guidowb.mingming.model.WorkerInfo;
 import net.guidowb.mingming.model.WorkerStatus;
+import net.guidowb.mingming.repositories.StatusRepository;
 import net.guidowb.mingming.work.Ping;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class ControllerEndpoints {
 
 	@Autowired private WorkerRegistry workerRegistry;
+	@Autowired private WorkRegistry workRegistry;
+	@Autowired private StatusRepository statusRepository;
 
 	@RequestMapping(value="/workers", method=RequestMethod.POST)
 	public ResponseEntity<?> registerWorker(@RequestBody WorkerInfo worker) {
@@ -42,12 +45,12 @@ public class ControllerEndpoints {
 
 	@RequestMapping(value="/workers/{workerId}/work", method=RequestMethod.GET)
 	public Iterable<Work> getInstructions(@PathVariable String workerId) {
-		return new ArrayList<Work>();
+		return workRegistry.workForWorker(workerId);
 	}
 
 	@RequestMapping(value="/workers/{workerId}/status", method=RequestMethod.PUT)
 	public void reportStatus(@PathVariable String workerId, @RequestBody WorkerStatus status) {
-		
+		statusRepository.save(status.getWorkStatus());
 	}
 
 	@RequestMapping(value="/work", method=RequestMethod.GET)

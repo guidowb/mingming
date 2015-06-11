@@ -7,8 +7,8 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import net.guidowb.mingming.model.Schedule;
-import net.guidowb.mingming.model.WorkStatus;
 import net.guidowb.mingming.model.Work;
+import net.guidowb.mingming.model.WorkStatus;
 import net.guidowb.mingming.model.WorkerInfo;
 
 public class Ping extends Work {
