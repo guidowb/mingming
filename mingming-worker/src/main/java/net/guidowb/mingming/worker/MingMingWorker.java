@@ -67,7 +67,7 @@ public class MingMingWorker implements CommandLineRunner {
 			work.schedule(workerPool);
 		}
 		
-		for (String toDelete :unreferencedWork) {
+		for (String toDelete : unreferencedWork) {
 			Work deletedWork = activeWork.remove(toDelete);
 			if (deletedWork != null) deletedWork.cancel();
 		}
