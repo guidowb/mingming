@@ -182,4 +182,20 @@ public class MingmingControllerTests {
 		Work[] assignedWork = template.getForObject(serverURI + "/workers/" + workerId + "/work", Work[].class);
 		assertEquals(3, assignedWork.length);
 	}
+	
+	@Test
+	public void unassignedWorkIsRemoved() {
+		WorkerInfo workerIn = createWorker();
+		String workerId = postWorker(workerIn);
+		String work1 = postWork(createPing());
+		String work2 = postWork(createPing());
+		String work3 = postWork(createPing());
+		RestTemplate template = new RestTemplate();
+		template.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work1, null);
+		template.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work2, null);
+		template.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work3, null);
+		template.delete(serverURI + "/workers/" + workerId + "/work/" + work2);
+		Work[] assignedWork = template.getForObject(serverURI + "/workers/" + workerId + "/work", Work[].class);
+		assertEquals(2, assignedWork.length);
+	}
 }

@@ -1,1 +1,1 @@
-include 'mingming-model', 'mingming-controller', 'mingming-worker'
+include 'mingming-model', 'mingming-controller', 'mingming-worker', 'mingming-tests'

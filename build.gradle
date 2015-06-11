@@ -43,6 +43,14 @@ project(':mingming-controller') {
     }
 }
 
+project(':mingming-tests') {
+    dependencies {
+        compile project(':mingming-model')
+        compile project(':mingming-controller')
+        compile project(':mingming-worker')
+    }
+}
+
 task wrapper(type: Wrapper) {
     gradleVersion = '2.3'
 }

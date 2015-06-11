@@ -1,0 +1,13 @@
+apply plugin: 'spring-boot' 
+apply plugin: 'io.spring.dependency-management' 
+
+project.mainClassName = 'dummy'
+
+jar {
+    baseName = 'mingming-tests'
+    version = '0.0.1-SNAPSHOT'
+}
+
+dependencies {
+    testCompile("org.springframework.boot:spring-boot-starter-test") 
+}
