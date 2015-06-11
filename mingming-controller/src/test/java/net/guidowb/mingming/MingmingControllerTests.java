@@ -66,24 +66,24 @@ public class MingmingControllerTests {
 		return worker;
 	}
 
-	private URI postWorker(WorkerInfo worker) {
+	private String postWorker(WorkerInfo worker) {
 		RestTemplate template = new RestTemplate();
-		return serverURI.resolve("/workers/").resolve(template.postForLocation(serverURI.resolve("/workers"), worker));
+		return template.postForLocation(serverURI + "/workers", worker).toString();
 	}
 
 	@Test
-	public void registerWorkerReturnsCorrectURI() {
+	public void registerWorkerReturnsCorrectId() {
 		WorkerInfo worker = createWorker();
-		URI location = postWorker(worker);
-		assertEquals(URI.create(serverURI + "/workers/" + worker.getId()), location);
+		String id = postWorker(worker);
+		assertEquals(worker.getId(), id);
 	}
 	
 	@Test
 	public void getWorkerReturnsCorrectProperties() {
 		WorkerInfo workerIn = createWorker();
 		RestTemplate template = new RestTemplate();
-		URI location = postWorker(workerIn);
-		WorkerInfo workerOut = template.getForObject(location, WorkerInfo.class);
+		String id = postWorker(workerIn);
+		WorkerInfo workerOut = template.getForObject(serverURI + "/workers/" + id, WorkerInfo.class);
 		assertEquals(workerIn.getId(), workerOut.getId());
 		assertEquals(workerIn.getApplicationName(), workerOut.getApplicationName());
 		assertEquals(workerIn.getApplicationRoute(), workerOut.getApplicationRoute());
@@ -91,7 +91,6 @@ public class MingmingControllerTests {
 		assertEquals(workerIn.getInstanceIndex(), workerOut.getInstanceIndex());
 		assertEquals(workerIn.getInstanceHost(), workerOut.getInstanceHost());
 		assertEquals(workerIn.getInstancePort(), workerOut.getInstancePort());
-		assertNull(workerOut.getAssignedWork());
 	}
 	
 	private Ping createPing() { return createPing(null); }
@@ -102,7 +101,7 @@ public class MingmingControllerTests {
 
 	private String postWork(Work work) {
 		RestTemplate template = new RestTemplate();
-		return template.postForLocation(serverURI.resolve("/work"), work).toString();
+		return template.postForLocation(serverURI + "/work", work).toString();
 	}
 
 	@Test
@@ -117,7 +116,7 @@ public class MingmingControllerTests {
 		Ping ping = createPing();
 		String id = postWork(ping);
 		RestTemplate template = new RestTemplate();
-		Work work = template.getForObject(serverURI.resolve("/work/").resolve(id), Work.class);
+		Work work = template.getForObject(serverURI + "/work/" + id, Work.class);
 		assertTrue(work instanceof Ping);
 	}
 
@@ -126,7 +125,7 @@ public class MingmingControllerTests {
 		Ping ping = createPing(Schedule.once());
 		String id = postWork(ping);
 		RestTemplate template = new RestTemplate();
-		Work work = template.getForObject(serverURI.resolve("/work/").resolve(id), Work.class);
+		Work work = template.getForObject(serverURI + "/work/" + id, Work.class);
 		assertTrue(work.getSchedule() instanceof ScheduleOnce);
 	}
 
@@ -135,7 +134,7 @@ public class MingmingControllerTests {
 		Ping ping = createPing(Schedule.repeat(5L, TimeUnit.MINUTES));
 		String id = postWork(ping);
 		RestTemplate template = new RestTemplate();
-		Work work = template.getForObject(serverURI.resolve("/work/").resolve(id), Work.class);
+		Work work = template.getForObject(serverURI + "/work/" + id, Work.class);
 		assertTrue(work.getSchedule() instanceof ScheduleRepeat);
 		ScheduleRepeat repeat = (ScheduleRepeat) work.getSchedule();
 		assertEquals((Long) 5L, repeat.getPeriod());
@@ -145,16 +144,42 @@ public class MingmingControllerTests {
 	@Test
 	public void assignedWorkIsIgnoredOnPost() {
 		WorkerInfo workerIn = createWorker();
+		workerIn.assignWork("non-existent-work-1");
+		workerIn.assignWork("non-existent-work-2");
+		workerIn.assignWork("non-existent-work-3");
+		String id = postWorker(workerIn);
 		RestTemplate template = new RestTemplate();
-		URI location = postWorker(workerIn);
-		WorkerInfo workerOut = template.getForObject(location, WorkerInfo.class);
-		assertEquals(workerIn.getId(), workerOut.getId());
-		assertEquals(workerIn.getApplicationName(), workerOut.getApplicationName());
-		assertEquals(workerIn.getApplicationRoute(), workerOut.getApplicationRoute());
-		assertEquals(workerIn.getInstanceId(), workerOut.getInstanceId());
-		assertEquals(workerIn.getInstanceIndex(), workerOut.getInstanceIndex());
-		assertEquals(workerIn.getInstanceHost(), workerOut.getInstanceHost());
-		assertEquals(workerIn.getInstancePort(), workerOut.getInstancePort());
-		assertNull(workerOut.getAssignedWork());
+		Work[] assignedWork = template.getForObject(serverURI + "/workers/" + id + "/work", Work[].class);
+		assertEquals(0, assignedWork.length);
+	}
+
+	@Test
+	public void assignedWorkIsIgnoredInJson() {
+		WorkerInfo workerIn = createWorker();
+		String workerId = postWorker(workerIn);
+		String work1 = postWork(createPing());
+		String work2 = postWork(createPing());
+		String work3 = postWork(createPing());
+		RestTemplate template = new RestTemplate();
+		template.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work1, null);
+		template.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work2, null);
+		template.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work3, null);
+		WorkerInfo workerOut = template.getForObject(serverURI + "/workers/" + workerId, WorkerInfo.class);
+		assertFalse(workerOut.getAssignedWork().iterator().hasNext());
+	}
+
+	@Test
+	public void assignedWorkIsReturned() {
+		WorkerInfo workerIn = createWorker();
+		String workerId = postWorker(workerIn);
+		String work1 = postWork(createPing());
+		String work2 = postWork(createPing());
+		String work3 = postWork(createPing());
+		RestTemplate template = new RestTemplate();
+		template.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work1, null);
+		template.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work2, null);
+		template.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work3, null);
+		Work[] assignedWork = template.getForObject(serverURI + "/workers/" + workerId + "/work", Work[].class);
+		assertEquals(3, assignedWork.length);
 	}
 }

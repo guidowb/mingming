@@ -1,11 +1,12 @@
 package net.guidowb.mingming.model;
 
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.Set;
+import java.util.List;
 
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.ManyToMany;
 
 import org.springframework.core.env.Environment;
 
@@ -21,7 +22,7 @@ public class WorkerInfo {
 	private String  applicationName;
 	private String  applicationRoute;
 	private @JsonIgnore Date lastUpdate;
-	private @JsonIgnore @ManyToMany Set<Work> assignedWork;
+	private @JsonIgnore @ElementCollection List<String> assignedWork = new ArrayList<String>();
 
 	public WorkerInfo() {}
 
@@ -42,5 +43,7 @@ public class WorkerInfo {
 	public String getApplicationName() { return applicationName; }
 	public String getApplicationRoute() { return applicationRoute; }
 	
-	public Iterable<Work> getAssignedWork() { return assignedWork; }
+	public Iterable<String> getAssignedWork() { return assignedWork; }
+	public void assignWork(String workId) { assignedWork.add(workId); }
+	public void unassignWork(String workId) { assignedWork.remove(workId); }
 }

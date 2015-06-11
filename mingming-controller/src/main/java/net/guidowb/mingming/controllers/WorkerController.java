@@ -1,11 +1,14 @@
 package net.guidowb.mingming.controllers;
 
 import java.net.URI;
+
 import net.guidowb.mingming.model.Work;
 import net.guidowb.mingming.model.WorkerInfo;
 import net.guidowb.mingming.model.WorkerStatus;
 import net.guidowb.mingming.repositories.StatusRepository;
+import net.guidowb.mingming.repositories.WorkRepository;
 import net.guidowb.mingming.repositories.WorkerRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -22,6 +25,7 @@ public class WorkerController {
 
 	@Autowired private WorkerRepository workerRepository;
 	@Autowired private StatusRepository statusRepository;
+	@Autowired private WorkRepository workRepository;
 
 	@RequestMapping(method=RequestMethod.POST)
 	public ResponseEntity<?> registerWorker(@RequestBody WorkerInfo worker) {
@@ -43,9 +47,24 @@ public class WorkerController {
 	}
 
 	@RequestMapping(value="/{workerId}/work", method=RequestMethod.GET)
-	public Iterable<Work> getWork(@PathVariable String workerId) {
+	public Iterable<Work> listWork(@PathVariable String workerId) {
 		WorkerInfo worker = workerRepository.findOne(workerId);
-		return worker.getAssignedWork();
+		Iterable<String> assignedWork = worker.getAssignedWork();
+		return workRepository.findAll(assignedWork);
+	}
+
+	@RequestMapping(value="/{workerId}/work/{workId}", method=RequestMethod.POST)
+	public void assignWork(@PathVariable String workerId, @PathVariable String workId) {
+		WorkerInfo worker = workerRepository.findOne(workerId);
+		worker.assignWork(workId);
+		workerRepository.save(worker);
+	}
+
+	@RequestMapping(value="/{workerId}/work/{workId}", method=RequestMethod.DELETE)
+	public void unassignWork(@PathVariable String workerId, @PathVariable String workId) {
+		WorkerInfo worker = workerRepository.findOne(workerId);
+		worker.unassignWork(workId);
+		workerRepository.save(worker);
 	}
 
 	@RequestMapping(value="/{workerId}/status", method=RequestMethod.PUT)
