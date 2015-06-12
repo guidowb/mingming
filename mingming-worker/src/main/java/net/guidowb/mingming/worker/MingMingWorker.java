@@ -2,9 +2,7 @@ package net.guidowb.mingming.worker;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
@@ -18,7 +16,6 @@ import org.springframework.core.env.Environment;
 import org.springframework.web.client.RestTemplate;
 
 import net.guidowb.mingming.model.Work;
-import net.guidowb.mingming.model.WorkStatus;
 import net.guidowb.mingming.model.WorkerInfo;
 import net.guidowb.mingming.model.WorkerStatus;
 
@@ -27,7 +24,7 @@ public class MingMingWorker implements CommandLineRunner {
 	private URI controllerUri;
 	private URI workerUri;
 	private WorkerInfo workerInfo;
-	private WorkerStatus workerStatus = new WorkerStatus();
+	private WorkerStatus workerStatus;
 	private Map<String, Work> activeWork = new HashMap<String, Work>();
 	private @Autowired Environment env;
 	private ScheduledExecutorService updatePool = Executors.newScheduledThreadPool(1);
@@ -54,6 +51,7 @@ public class MingMingWorker implements CommandLineRunner {
 		RestTemplate controller = new RestTemplate();
 		URI workersUri = controllerUri.resolve("/workers/");
 		this.workerUri = workersUri.resolve(controller.postForLocation(workersUri, workerInfo));
+		this.workerStatus = new WorkerStatus(workerInfo.getId());
 	}
 
 	private void updateWork() {
@@ -64,21 +62,20 @@ public class MingMingWorker implements CommandLineRunner {
 			unreferencedWork.remove(work.getId());
 			if (activeWork.containsKey(work.getId())) continue;
 			activeWork.put(work.getId(), work);
+			workerStatus.addWork(work);
 			work.schedule(workerPool);
 		}
 		
 		for (String toDelete : unreferencedWork) {
 			Work deletedWork = activeWork.remove(toDelete);
-			if (deletedWork != null) deletedWork.cancel();
+			if (deletedWork != null) {
+				deletedWork.cancel();
+				workerStatus.removeWork(deletedWork);
+			}
 		}
 	}
 
 	private void reportStatus() {
-		List<WorkStatus> workStatus = new ArrayList<WorkStatus>();
-		for (Work work : activeWork.values()) {
-			workStatus.add(work.getStatus().setMetadata(this.getId(), work.getId()));
-		}
-		workerStatus.setWorkStatus(workStatus);
 		controller.put(workerUri.resolve("/status"), workerStatus);
 	}
 

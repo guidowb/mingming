@@ -9,6 +9,7 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import net.guidowb.mingming.model.ForSerializationOnly;
 import net.guidowb.mingming.model.Schedule;
 import net.guidowb.mingming.model.Work;
 import net.guidowb.mingming.model.WorkStatus;
@@ -19,9 +20,9 @@ public class Ping extends Work {
 
 	private String url;
 	private @Transient RestTemplate restTemplate = null;
-	private @Transient PingStatus status;
+	private @Transient PingStatus status = null;
 
-	public class PingStatus extends WorkStatus {
+	public static class PingStatus extends WorkStatus {
 		Long numSuccesses;
 		Long numFailures;
 		Date lastAttempted;
@@ -30,11 +31,14 @@ public class Ping extends Work {
 		Long minElapsed = Long.MAX_VALUE;
 		Long avgElapsed;
 		Long maxElapsed;
+		
+		public PingStatus(String workerId, String workId) {
+			super(workerId, workId);
+		}
 	}
 
-	public Ping() {
-		this.status = new PingStatus();
-	}
+	@ForSerializationOnly
+	private Ping() {}
 
 	public Ping(Schedule schedule, String url) {
 		super(schedule);
@@ -85,5 +89,8 @@ public class Ping extends Work {
 	}
 
 	@Override
-	public WorkStatus getStatus() { return status; }
+	public WorkStatus getStatus(String workerId) {
+		if (status == null) status = new PingStatus(workerId, getId());
+		return status;
+	}
 }

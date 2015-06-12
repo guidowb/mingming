@@ -11,7 +11,9 @@ import net.guidowb.mingming.model.Schedule;
 import net.guidowb.mingming.model.ScheduleOnce;
 import net.guidowb.mingming.model.ScheduleRepeat;
 import net.guidowb.mingming.model.Work;
+import net.guidowb.mingming.model.WorkStatus;
 import net.guidowb.mingming.model.WorkerInfo;
+import net.guidowb.mingming.model.WorkerStatus;
 import net.guidowb.mingming.work.Ping;
 
 import org.junit.Before;
@@ -197,5 +199,16 @@ public class MingmingControllerTests {
 		template.delete(serverURI + "/workers/" + workerId + "/work/" + work2);
 		Work[] assignedWork = template.getForObject(serverURI + "/workers/" + workerId + "/work", Work[].class);
 		assertEquals(2, assignedWork.length);
+	}
+	
+	@Test
+	public void reportStatus() {
+		String workerId = postWorker(createWorker());
+		WorkerStatus status = new WorkerStatus(workerId);
+		status.addWork(createPing());
+		status.addWork(createPing());
+		status.addWork(createPing());
+		RestTemplate template = new RestTemplate();
+		template.put(serverURI + "/workers/" + workerId + "/status", status);
 	}
 }

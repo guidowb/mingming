@@ -34,6 +34,7 @@ public abstract class Work implements Runnable {
 
 	private @OneToOne(cascade=CascadeType.ALL) Schedule schedule;
 
+	@ForSerializationOnly
 	protected Work() {}
 
 	protected Work(Schedule schedule) {
@@ -42,7 +43,7 @@ public abstract class Work implements Runnable {
 	
 	public String getId() { return id; }
 	public Schedule getSchedule() { return schedule; }
-	public @JsonIgnore abstract WorkStatus getStatus();
+	public @JsonIgnore abstract WorkStatus getStatus(String workerId);
 
 	public void schedule(ScheduledExecutorService service) {
 		schedule.schedule(this, service);

@@ -41,9 +41,11 @@ public abstract class WorkStatus {
 	public String getWorkId() { return this.key.workId; }
 	public String getWorkerId() { return this.key.workerId; }
 
-	public WorkStatus setMetadata(String workerId, String workId) {
+	@ForSerializationOnly
+	private WorkStatus() {}
+
+	public WorkStatus(String workerId, String workId) {
 		this.key = new Key(workId, workerId, new Date());
-		return this;
 	}
 
 

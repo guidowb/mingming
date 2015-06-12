@@ -1,11 +1,24 @@
 package net.guidowb.mingming.model;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class WorkerStatus {
 
-	private List<WorkStatus> workStatus;
+	public String workerId;
+
+	private @JsonIgnore Map<String, WorkStatus> workStatus = new HashMap<String, WorkStatus>();
 	
-	public void setWorkStatus(List<WorkStatus> status) { this.workStatus = status; }
-	public List<WorkStatus> getWorkStatus() { return this.workStatus; }
+	public Iterable<WorkStatus> getWorkStatus() { return this.workStatus.values(); }
+	public void addWork(Work work) { this.workStatus.put(work.getId(), work.getStatus(workerId)); }
+	public void removeWork(Work work) { this.workStatus.remove(work.getId()); }
+
+	@ForSerializationOnly
+	private WorkerStatus() {}
+
+	public WorkerStatus(String workerId) {
+		this.workerId = workerId;
+	}
 }
