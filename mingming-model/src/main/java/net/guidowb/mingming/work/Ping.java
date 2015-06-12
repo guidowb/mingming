@@ -22,6 +22,7 @@ public class Ping extends Work {
 	private @Transient RestTemplate restTemplate = null;
 	private @Transient PingStatus status = null;
 
+	@Entity
 	public static class PingStatus extends WorkStatus {
 		Long numSuccesses;
 		Long numFailures;
@@ -32,6 +33,9 @@ public class Ping extends Work {
 		Long avgElapsed;
 		Long maxElapsed;
 		
+		@ForSerializationOnly
+		private PingStatus() {}
+	
 		public PingStatus(String workerId, String workId) {
 			super(workerId, workId);
 		}

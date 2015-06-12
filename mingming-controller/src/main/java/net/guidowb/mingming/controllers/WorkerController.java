@@ -3,6 +3,7 @@ package net.guidowb.mingming.controllers;
 import java.net.URI;
 
 import net.guidowb.mingming.model.Work;
+import net.guidowb.mingming.model.WorkStatus;
 import net.guidowb.mingming.model.WorkerInfo;
 import net.guidowb.mingming.model.WorkerStatus;
 import net.guidowb.mingming.repositories.StatusRepository;
@@ -69,6 +70,20 @@ public class WorkerController {
 
 	@RequestMapping(value="/{workerId}/status", method=RequestMethod.PUT)
 	public void reportStatus(@PathVariable String workerId, @RequestBody WorkerStatus status) {
+		if (status.workerId == null) throw new ValidationException("workerId in request body must not be null");
+		if (!status.workerId.equals(workerId)) throw new ValidationException("workerId in request body (%s) must match the one in request path (%s)", status.workerId, workerId);
+		Iterable<WorkStatus> workStatusList = status.getWorkStatus();
+		for (WorkStatus workStatus : workStatusList) {
+			if (workStatus.getWorkerId()  == null) throw new ValidationException("workerId in work status must not be null");
+			if (workStatus.getWorkId()    == null) throw new ValidationException("workId in work status must not be null");
+			if (workStatus.getTimestamp() == null) throw new ValidationException("timestamp in work status must not be null");
+			if (!workStatus.getWorkerId().equals(workerId)) throw new ValidationException("workerId in work status must match the one in request path");
+		}
 		statusRepository.save(status.getWorkStatus());
+	}
+	
+	@RequestMapping(value="/{workerId}/status", method=RequestMethod.GET)
+	public Iterable<WorkStatus> getStatus(@PathVariable String workerId) {
+		return statusRepository.findByKeyWorkerId(workerId);
 	}
 }

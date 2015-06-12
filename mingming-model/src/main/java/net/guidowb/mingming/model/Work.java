@@ -30,7 +30,7 @@ public abstract class Work implements Runnable {
     @Column(length=40)
     @GeneratedValue(generator="UUID")
     @GenericGenerator(name="UUID", strategy="net.guidowb.mingming.repositories.UUIDGenerator")
-	private String id;
+	protected String id;
 
 	private @OneToOne(cascade=CascadeType.ALL) Schedule schedule;
 
@@ -40,7 +40,7 @@ public abstract class Work implements Runnable {
 	protected Work(Schedule schedule) {
 		this.schedule = schedule;
 	}
-	
+
 	public String getId() { return id; }
 	public Schedule getSchedule() { return schedule; }
 	public @JsonIgnore abstract WorkStatus getStatus(String workerId);

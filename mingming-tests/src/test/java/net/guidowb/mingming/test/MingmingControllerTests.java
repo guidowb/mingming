@@ -1,4 +1,4 @@
-package net.guidowb.mingming;
+package net.guidowb.mingming.test;
 
 import static org.junit.Assert.*;
 
@@ -94,7 +94,7 @@ public class MingmingControllerTests {
 		assertEquals(workerIn.getInstanceHost(), workerOut.getInstanceHost());
 		assertEquals(workerIn.getInstancePort(), workerOut.getInstancePort());
 	}
-	
+
 	private Ping createPing() { return createPing(null); }
 	private Ping createPing(Schedule schedule) {
 		Ping ping = new Ping(schedule, serverURI.toString());
@@ -104,6 +104,11 @@ public class MingmingControllerTests {
 	private String postWork(Work work) {
 		RestTemplate template = new RestTemplate();
 		return template.postForLocation(serverURI + "/work", work).toString();
+	}
+
+	private Work getWork(String workId) {
+		RestTemplate template = new RestTemplate();
+		return template.getForObject(serverURI + "/work/" + workId, Work.class);
 	}
 
 	@Test
@@ -205,10 +210,31 @@ public class MingmingControllerTests {
 	public void reportStatus() {
 		String workerId = postWorker(createWorker());
 		WorkerStatus status = new WorkerStatus(workerId);
-		status.addWork(createPing());
-		status.addWork(createPing());
-		status.addWork(createPing());
+		status.addWork(getWork(postWork(createPing())));
+		status.addWork(getWork(postWork(createPing())));
+		status.addWork(getWork(postWork(createPing())));
 		RestTemplate template = new RestTemplate();
 		template.put(serverURI + "/workers/" + workerId + "/status", status);
+	}
+	
+	@Test
+	public void statusCanBeFoundByWorker() {
+		String worker1 = postWorker(createWorker());
+		String worker2 = postWorker(createWorker());
+		WorkerStatus status1 = new WorkerStatus(worker1);
+		WorkerStatus status2 = new WorkerStatus(worker2);
+		status1.addWork(getWork(postWork(createPing())));
+		status1.addWork(getWork(postWork(createPing())));
+		status1.addWork(getWork(postWork(createPing())));
+		status2.addWork(getWork(postWork(createPing())));
+		RestTemplate template = new RestTemplate();
+		template.put(serverURI + "/workers/" + worker1 + "/status", status1);
+		template.put(serverURI + "/workers/" + worker2 + "/status", status2);
+		WorkStatus[] result0 = template.getForObject(serverURI + "/status", WorkStatus[].class);
+		WorkStatus[] result1 = template.getForObject(serverURI + "/workers/" + worker1 + "/status", WorkStatus[].class);
+		WorkStatus[] result2 = template.getForObject(serverURI + "/workers/" + worker2 + "/status", WorkStatus[].class);
+		assertEquals(4, result0.length);
+		assertEquals(3, result1.length);
+		assertEquals(1, result2.length);
 	}
 }

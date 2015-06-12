@@ -9,6 +9,7 @@ import javax.persistence.Entity;
 
 import net.guidowb.mingming.work.Ping;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -21,12 +22,15 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 public abstract class WorkStatus {
 	
 	@Embeddable
-	public class Key implements Serializable {
+	public static class Key implements Serializable {
 		private static final long serialVersionUID = 1L;
 		private Date timestamp;
 		private String workId;
 		private String workerId;
 		
+		@ForSerializationOnly
+		private Key() {}
+
 		public Key(String workId, String workerId, Date timestamp) {
 			this.workId = workId;
 			this.workerId = workerId;
@@ -34,15 +38,19 @@ public abstract class WorkStatus {
 		}
 	}
 
-	@EmbeddedId
+	@EmbeddedId @JsonIgnore
 	private Key key;
 
 	public Date getTimestamp() { return this.key.timestamp; }
 	public String getWorkId() { return this.key.workId; }
 	public String getWorkerId() { return this.key.workerId; }
 
+	public void setTimestamp(Date timestamp) { this.key.timestamp = timestamp; }
+	public void setWorkId(String workId) { this.key.workId = workId; }
+	public void setWorkerId(String workerId) { this.key.workerId = workerId; }
+
 	@ForSerializationOnly
-	private WorkStatus() {}
+	protected WorkStatus() { this.key = new Key(); }
 
 	public WorkStatus(String workerId, String workId) {
 		this.key = new Key(workId, workerId, new Date());

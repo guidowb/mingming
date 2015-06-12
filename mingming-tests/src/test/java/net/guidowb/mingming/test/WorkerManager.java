@@ -1,4 +1,4 @@
-package net.guidowb.mingming;
+package net.guidowb.mingming.test;
 
 import net.guidowb.mingming.worker.MingMingWorker;
 
