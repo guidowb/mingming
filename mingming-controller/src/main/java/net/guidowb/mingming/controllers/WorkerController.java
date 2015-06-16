@@ -1,6 +1,8 @@
 package net.guidowb.mingming.controllers;
 
 import java.net.URI;
+import java.util.Calendar;
+import java.util.Date;
 
 import net.guidowb.mingming.model.Work;
 import net.guidowb.mingming.model.WorkStatus;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -38,8 +41,11 @@ public class WorkerController {
 	}
 
 	@RequestMapping(method=RequestMethod.GET)
-	public Iterable<WorkerInfo> listWorkers() {
-		return workerRepository.findAll();
+	public Iterable<WorkerInfo> listWorkers(@RequestParam(value="since", defaultValue="30") Integer since) {
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(new Date());
+		cal.add(Calendar.SECOND, -since);
+		return workerRepository.findByLastUpdateGreaterThan(cal.getTime());
 	}
 
 	@RequestMapping(value="/{workerId}", method=RequestMethod.GET)
@@ -72,6 +78,10 @@ public class WorkerController {
 	public void reportStatus(@PathVariable String workerId, @RequestBody WorkerStatus status) {
 		if (status.workerId == null) throw new ValidationException("workerId in request body must not be null");
 		if (!status.workerId.equals(workerId)) throw new ValidationException("workerId in request body (%s) must match the one in request path (%s)", status.workerId, workerId);
+		WorkerInfo worker = workerRepository.findOne(workerId);
+		if (worker == null) throw new ValidationException("worked with id %s does not exist", workerId);
+		worker.setLastUpdate();
+		workerRepository.save(worker);
 		Iterable<WorkStatus> workStatusList = status.getWorkStatus();
 		for (WorkStatus workStatus : workStatusList) {
 			if (workStatus.getWorkerId()  == null) throw new ValidationException("workerId in work status must not be null");

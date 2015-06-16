@@ -53,7 +53,7 @@ public class MingMingWorker implements CommandLineRunner {
 	}
 
 	private void updateWork() {
-		Work[] newWork = controller.getForObject(workerUri.resolve("/work"), Work[].class);
+		Work[] newWork = controller.getForObject(workerUri + "/work", Work[].class);
 		Set<String> unreferencedWork = activeWork.keySet();
 
 		for (Work work : newWork) {
@@ -74,7 +74,7 @@ public class MingMingWorker implements CommandLineRunner {
 	}
 
 	private void reportStatus() {
-		controller.put(workerUri.resolve("/status"), workerStatus);
+		controller.put(workerUri + "/status", workerStatus);
 	}
 
 	private void scheduleUpdates() {

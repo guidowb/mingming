@@ -3,6 +3,7 @@ package net.guidowb.mingming.model;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -27,7 +28,7 @@ public class WorkerInfo {
 	public WorkerInfo() {}
 
 	public WorkerInfo(Environment env) {
-	    this.instanceId = env.getProperty("vcap.application.instance_id", "local");
+	    this.instanceId = env.getProperty("vcap.application.instance_id", UUID.randomUUID().toString());
 	    this.applicationName = env.getProperty("vcap.application.application_name", "unknown");
 	    this.instanceIndex = Integer.valueOf(env.getProperty("vcap.application.instance_index", "0"));
 	    this.applicationRoute = env.getProperty("vcap.application.uris[0]", "localhost:8080");
@@ -46,4 +47,6 @@ public class WorkerInfo {
 	public Iterable<String> getAssignedWork() { return assignedWork; }
 	public void assignWork(String workId) { assignedWork.add(workId); }
 	public void unassignWork(String workId) { assignedWork.remove(workId); }
+	
+	public void setLastUpdate() { lastUpdate = new Date(); }
 }

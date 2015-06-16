@@ -50,9 +50,17 @@ public class MingmingWorkerTests {
 	@Test
 	public void workerStarts() {
 		workerPool.start(1);
-		sleep(6);
-		WorkerInfo[] workers = client.getForObject(serverURI + "/workers", WorkerInfo[].class);
+		sleep(11);
+		WorkerInfo[] workers = client.getForObject(serverURI + "/workers?since=10", WorkerInfo[].class);
 		assertEquals(1, workers.length);
+	}
+	
+	@Test
+	public void multipleWorkersStart() {
+		workerPool.start(3);
+		sleep(16);
+		WorkerInfo[] workers = client.getForObject(serverURI + "/workers?since=10", WorkerInfo[].class);
+		assertEquals(3, workers.length);
 	}
 
 	private void sleep(int seconds) {
