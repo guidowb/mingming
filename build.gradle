@@ -47,7 +47,6 @@ project(':mingming-tests') {
     dependencies {
         compile project(':mingming-model')
         compile project(':mingming-controller')
-        compile project(':mingming-worker')
     }
 }
 

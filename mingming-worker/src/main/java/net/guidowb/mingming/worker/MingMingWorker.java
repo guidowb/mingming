@@ -1,7 +1,6 @@
 package net.guidowb.mingming.worker;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -12,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.core.env.Environment;
 import org.springframework.web.client.RestTemplate;
 
@@ -19,6 +19,7 @@ import net.guidowb.mingming.model.Work;
 import net.guidowb.mingming.model.WorkerInfo;
 import net.guidowb.mingming.model.WorkerStatus;
 
+@SpringBootApplication
 public class MingMingWorker implements CommandLineRunner {
 
 	private URI controllerUri;
@@ -37,11 +38,8 @@ public class MingMingWorker implements CommandLineRunner {
         SpringApplication.run(MingMingWorker.class, args);
     }
 
-	private MingMingWorker() throws URISyntaxException {
-		this.controllerUri = URI.create(env.getProperty("CONTROLLER"));
-	}
-
 	public void run(String... args) {
+		this.controllerUri = URI.create(env.getProperty("CONTROLLER"));
 		register();
 		scheduleUpdates();
 	}

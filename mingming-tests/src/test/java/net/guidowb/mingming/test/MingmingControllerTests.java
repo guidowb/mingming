@@ -38,10 +38,12 @@ public class MingmingControllerTests {
 	int port;
 
 	private URI serverURI;
+	private RestTemplate client;
 
 	@Before
 	public void setup() {
 		serverURI = URI.create("http://localhost:" + Integer.toString(port));
+		client = new RestTemplate();
 	}
 
 	@Test
@@ -69,8 +71,7 @@ public class MingmingControllerTests {
 	}
 
 	private String postWorker(WorkerInfo worker) {
-		RestTemplate template = new RestTemplate();
-		return template.postForLocation(serverURI + "/workers", worker).toString();
+		return client.postForLocation(serverURI + "/workers", worker).toString();
 	}
 
 	@Test
@@ -83,9 +84,8 @@ public class MingmingControllerTests {
 	@Test
 	public void getWorkerReturnsCorrectProperties() {
 		WorkerInfo workerIn = createWorker();
-		RestTemplate template = new RestTemplate();
 		String id = postWorker(workerIn);
-		WorkerInfo workerOut = template.getForObject(serverURI + "/workers/" + id, WorkerInfo.class);
+		WorkerInfo workerOut = client.getForObject(serverURI + "/workers/" + id, WorkerInfo.class);
 		assertEquals(workerIn.getId(), workerOut.getId());
 		assertEquals(workerIn.getApplicationName(), workerOut.getApplicationName());
 		assertEquals(workerIn.getApplicationRoute(), workerOut.getApplicationRoute());
@@ -102,13 +102,11 @@ public class MingmingControllerTests {
 	}
 
 	private String postWork(Work work) {
-		RestTemplate template = new RestTemplate();
-		return template.postForLocation(serverURI + "/work", work).toString();
+		return client.postForLocation(serverURI + "/work", work).toString();
 	}
 
 	private Work getWork(String workId) {
-		RestTemplate template = new RestTemplate();
-		return template.getForObject(serverURI + "/work/" + workId, Work.class);
+		return client.getForObject(serverURI + "/work/" + workId, Work.class);
 	}
 
 	@Test
@@ -122,8 +120,7 @@ public class MingmingControllerTests {
 	public void getWorkReturnsCorrectSubclassForPing() {
 		Ping ping = createPing();
 		String id = postWork(ping);
-		RestTemplate template = new RestTemplate();
-		Work work = template.getForObject(serverURI + "/work/" + id, Work.class);
+		Work work = client.getForObject(serverURI + "/work/" + id, Work.class);
 		assertTrue(work instanceof Ping);
 	}
 
@@ -131,8 +128,7 @@ public class MingmingControllerTests {
 	public void getWorkReturnsCorrectScheduleForOnce() {
 		Ping ping = createPing(Schedule.once());
 		String id = postWork(ping);
-		RestTemplate template = new RestTemplate();
-		Work work = template.getForObject(serverURI + "/work/" + id, Work.class);
+		Work work = client.getForObject(serverURI + "/work/" + id, Work.class);
 		assertTrue(work.getSchedule() instanceof ScheduleOnce);
 	}
 
@@ -140,8 +136,7 @@ public class MingmingControllerTests {
 	public void getWorkReturnsCorrectScheduleForRepeat() {
 		Ping ping = createPing(Schedule.repeat(5L, TimeUnit.MINUTES));
 		String id = postWork(ping);
-		RestTemplate template = new RestTemplate();
-		Work work = template.getForObject(serverURI + "/work/" + id, Work.class);
+		Work work = client.getForObject(serverURI + "/work/" + id, Work.class);
 		assertTrue(work.getSchedule() instanceof ScheduleRepeat);
 		ScheduleRepeat repeat = (ScheduleRepeat) work.getSchedule();
 		assertEquals((Long) 5L, repeat.getPeriod());
@@ -155,8 +150,7 @@ public class MingmingControllerTests {
 		workerIn.assignWork("non-existent-work-2");
 		workerIn.assignWork("non-existent-work-3");
 		String id = postWorker(workerIn);
-		RestTemplate template = new RestTemplate();
-		Work[] assignedWork = template.getForObject(serverURI + "/workers/" + id + "/work", Work[].class);
+		Work[] assignedWork = client.getForObject(serverURI + "/workers/" + id + "/work", Work[].class);
 		assertEquals(0, assignedWork.length);
 	}
 
@@ -167,11 +161,10 @@ public class MingmingControllerTests {
 		String work1 = postWork(createPing());
 		String work2 = postWork(createPing());
 		String work3 = postWork(createPing());
-		RestTemplate template = new RestTemplate();
-		template.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work1, null);
-		template.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work2, null);
-		template.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work3, null);
-		WorkerInfo workerOut = template.getForObject(serverURI + "/workers/" + workerId, WorkerInfo.class);
+		client.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work1, null);
+		client.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work2, null);
+		client.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work3, null);
+		WorkerInfo workerOut = client.getForObject(serverURI + "/workers/" + workerId, WorkerInfo.class);
 		assertFalse(workerOut.getAssignedWork().iterator().hasNext());
 	}
 
@@ -182,11 +175,10 @@ public class MingmingControllerTests {
 		String work1 = postWork(createPing());
 		String work2 = postWork(createPing());
 		String work3 = postWork(createPing());
-		RestTemplate template = new RestTemplate();
-		template.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work1, null);
-		template.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work2, null);
-		template.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work3, null);
-		Work[] assignedWork = template.getForObject(serverURI + "/workers/" + workerId + "/work", Work[].class);
+		client.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work1, null);
+		client.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work2, null);
+		client.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work3, null);
+		Work[] assignedWork = client.getForObject(serverURI + "/workers/" + workerId + "/work", Work[].class);
 		assertEquals(3, assignedWork.length);
 	}
 	
@@ -197,12 +189,11 @@ public class MingmingControllerTests {
 		String work1 = postWork(createPing());
 		String work2 = postWork(createPing());
 		String work3 = postWork(createPing());
-		RestTemplate template = new RestTemplate();
-		template.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work1, null);
-		template.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work2, null);
-		template.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work3, null);
-		template.delete(serverURI + "/workers/" + workerId + "/work/" + work2);
-		Work[] assignedWork = template.getForObject(serverURI + "/workers/" + workerId + "/work", Work[].class);
+		client.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work1, null);
+		client.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work2, null);
+		client.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work3, null);
+		client.delete(serverURI + "/workers/" + workerId + "/work/" + work2);
+		Work[] assignedWork = client.getForObject(serverURI + "/workers/" + workerId + "/work", Work[].class);
 		assertEquals(2, assignedWork.length);
 	}
 	
@@ -213,8 +204,7 @@ public class MingmingControllerTests {
 		status.addWork(getWork(postWork(createPing())));
 		status.addWork(getWork(postWork(createPing())));
 		status.addWork(getWork(postWork(createPing())));
-		RestTemplate template = new RestTemplate();
-		template.put(serverURI + "/workers/" + workerId + "/status", status);
+		client.put(serverURI + "/workers/" + workerId + "/status", status);
 	}
 	
 	@Test
@@ -227,12 +217,11 @@ public class MingmingControllerTests {
 		status1.addWork(getWork(postWork(createPing())));
 		status1.addWork(getWork(postWork(createPing())));
 		status2.addWork(getWork(postWork(createPing())));
-		RestTemplate template = new RestTemplate();
-		template.put(serverURI + "/workers/" + worker1 + "/status", status1);
-		template.put(serverURI + "/workers/" + worker2 + "/status", status2);
-		WorkStatus[] result0 = template.getForObject(serverURI + "/status", WorkStatus[].class);
-		WorkStatus[] result1 = template.getForObject(serverURI + "/workers/" + worker1 + "/status", WorkStatus[].class);
-		WorkStatus[] result2 = template.getForObject(serverURI + "/workers/" + worker2 + "/status", WorkStatus[].class);
+		client.put(serverURI + "/workers/" + worker1 + "/status", status1);
+		client.put(serverURI + "/workers/" + worker2 + "/status", status2);
+		WorkStatus[] result0 = client.getForObject(serverURI + "/status", WorkStatus[].class);
+		WorkStatus[] result1 = client.getForObject(serverURI + "/workers/" + worker1 + "/status", WorkStatus[].class);
+		WorkStatus[] result2 = client.getForObject(serverURI + "/workers/" + worker2 + "/status", WorkStatus[].class);
 		assertEquals(4, result0.length);
 		assertEquals(3, result1.length);
 		assertEquals(1, result2.length);
