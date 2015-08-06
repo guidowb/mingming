@@ -13,8 +13,8 @@ import net.guidowb.mingming.model.ScheduleRepeat;
 import net.guidowb.mingming.model.Work;
 import net.guidowb.mingming.model.WorkStatus;
 import net.guidowb.mingming.model.WorkerInfo;
-import net.guidowb.mingming.model.WorkerStatus;
 import net.guidowb.mingming.work.Ping;
+import net.guidowb.mingming.work.Ping.PingStatus;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -71,7 +71,8 @@ public class MingmingControllerTests {
 	}
 
 	private String postWorker(WorkerInfo worker) {
-		return client.postForLocation(serverURI + "/workers", worker).toString();
+		client.put(serverURI + "/workers/" + worker.getId(), worker);
+		return worker.getId();
 	}
 
 	@Test
@@ -101,12 +102,16 @@ public class MingmingControllerTests {
 		return ping;
 	}
 
-	private String postWork(Work work) {
-		return client.postForLocation(serverURI + "/work", work).toString();
+	private PingStatus createPingStatus(WorkerInfo worker) {
+		PingStatus status = new PingStatus();
+		status.setWorkerId(worker.getId());
+		status.setWorkId(postWork(createPing()));
+		status.setTimestamp();
+		return status;
 	}
 
-	private Work getWork(String workId) {
-		return client.getForObject(serverURI + "/work/" + workId, Work.class);
+	private String postWork(Work work) {
+		return client.postForLocation(serverURI + "/work", work).toString();
 	}
 
 	@Test
@@ -199,31 +204,21 @@ public class MingmingControllerTests {
 	
 	@Test
 	public void reportStatus() {
-		String workerId = postWorker(createWorker());
-		WorkerStatus status = new WorkerStatus(workerId);
-		status.addWork(getWork(postWork(createPing())));
-		status.addWork(getWork(postWork(createPing())));
-		status.addWork(getWork(postWork(createPing())));
-		client.put(serverURI + "/workers/" + workerId + "/status", status);
+		WorkerInfo workerIn = createWorker();
+		workerIn.reportWorkStatus(createPingStatus(workerIn));
+		workerIn.reportWorkStatus(createPingStatus(workerIn));
+		workerIn.reportWorkStatus(createPingStatus(workerIn));
+		postWorker(workerIn);
 	}
 	
 	@Test
-	public void statusCanBeFoundByWorker() {
-		String worker1 = postWorker(createWorker());
-		String worker2 = postWorker(createWorker());
-		WorkerStatus status1 = new WorkerStatus(worker1);
-		WorkerStatus status2 = new WorkerStatus(worker2);
-		status1.addWork(getWork(postWork(createPing())));
-		status1.addWork(getWork(postWork(createPing())));
-		status1.addWork(getWork(postWork(createPing())));
-		status2.addWork(getWork(postWork(createPing())));
-		client.put(serverURI + "/workers/" + worker1 + "/status", status1);
-		client.put(serverURI + "/workers/" + worker2 + "/status", status2);
-		WorkStatus[] result0 = client.getForObject(serverURI + "/status", WorkStatus[].class);
-		WorkStatus[] result1 = client.getForObject(serverURI + "/workers/" + worker1 + "/status", WorkStatus[].class);
-		WorkStatus[] result2 = client.getForObject(serverURI + "/workers/" + worker2 + "/status", WorkStatus[].class);
-		assertEquals(4, result0.length);
-		assertEquals(3, result1.length);
-		assertEquals(1, result2.length);
+	public void statusIsPersisted() {
+		WorkerInfo workerIn = createWorker();
+		workerIn.reportWorkStatus(createPingStatus(workerIn));
+		workerIn.reportWorkStatus(createPingStatus(workerIn));
+		workerIn.reportWorkStatus(createPingStatus(workerIn));
+		String workerId = postWorker(workerIn);
+		WorkStatus[] stati = client.getForObject(serverURI + "/workers/" + workerId + "/status", WorkStatus[].class);
+		assertEquals(3, stati.length);
 	}
 }

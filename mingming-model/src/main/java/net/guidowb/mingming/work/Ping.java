@@ -20,7 +20,7 @@ public class Ping extends Work {
 
 	private String url;
 	private @Transient RestTemplate restTemplate = null;
-	private @Transient PingStatus status = null;
+	private @Transient PingStatus status = new PingStatus();
 
 	@Entity
 	public static class PingStatus extends WorkStatus {
@@ -33,12 +33,7 @@ public class Ping extends Work {
 		Long avgElapsed;
 		Long maxElapsed;
 		
-		@ForSerializationOnly
-		private PingStatus() {}
-	
-		public PingStatus(String workerId, String workId) {
-			super(workerId, workId);
-		}
+		public PingStatus() {}
 	}
 
 	@ForSerializationOnly
@@ -82,7 +77,9 @@ public class Ping extends Work {
 		status.avgElapsed = (status.avgElapsed * (decay - 1) + elapsed) / decay;
 		
 		if (elapsed < status.minElapsed) status.minElapsed = elapsed;
-		if (elapsed > status.maxElapsed) status.maxElapsed = elapsed; 
+		if (elapsed > status.maxElapsed) status.maxElapsed = elapsed;
+		
+		reportStatus(status);
 	}
 	
 	private void recordFailure(String message) {
@@ -90,11 +87,7 @@ public class Ping extends Work {
 		status.numFailures ++;
 		status.lastAttempted = now;
 		status.lastFailed = now;
-	}
-
-	@Override
-	public WorkStatus getStatus(String workerId) {
-		if (status == null) status = new PingStatus(workerId, getId());
-		return status;
+		
+		reportStatus(status);
 	}
 }

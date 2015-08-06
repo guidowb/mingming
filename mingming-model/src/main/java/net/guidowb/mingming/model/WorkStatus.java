@@ -45,17 +45,13 @@ public abstract class WorkStatus {
 	public String getWorkId() { return this.key.workId; }
 	public String getWorkerId() { return this.key.workerId; }
 
+	public void setTimestamp() { setTimestamp(new Date()); }
 	public void setTimestamp(Date timestamp) { this.key.timestamp = timestamp; }
 	public void setWorkId(String workId) { this.key.workId = workId; }
 	public void setWorkerId(String workerId) { this.key.workerId = workerId; }
 
 	@ForSerializationOnly
 	protected WorkStatus() { this.key = new Key(); }
-
-	public WorkStatus(String workerId, String workId) {
-		this.key = new Key(workId, workerId, new Date());
-	}
-
 
 	// To work around Java's type erasure when constructing generic lists
 	@JsonProperty("class")

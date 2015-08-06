@@ -8,6 +8,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
+import javax.persistence.Transient;
 
 import org.hibernate.annotations.GenericGenerator;
 
@@ -33,6 +34,7 @@ public abstract class Work implements Runnable {
 	protected String id;
 
 	private @OneToOne(cascade=CascadeType.ALL) Schedule schedule;
+	private @JsonIgnore @Transient StatusReportingService reportingService;
 
 	@ForSerializationOnly
 	protected Work() {}
@@ -43,14 +45,19 @@ public abstract class Work implements Runnable {
 
 	public String getId() { return id; }
 	public Schedule getSchedule() { return schedule; }
-	public @JsonIgnore abstract WorkStatus getStatus(String workerId);
 
-	public void schedule(ScheduledExecutorService service) {
+	public void schedule(ScheduledExecutorService service, StatusReportingService reportingService) {
+		this.reportingService = reportingService;
 		schedule.schedule(this, service);
 	}
 	
 	public void cancel() {
 		schedule.cancel();
+	}
+
+	protected void reportStatus(WorkStatus status) {
+		status.setWorkId(getId());
+		reportingService.reportStatus(status);
 	}
 
 	// To work around Java's type erasure when constructing generic lists

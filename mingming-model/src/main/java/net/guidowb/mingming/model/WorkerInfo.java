@@ -2,12 +2,15 @@ package net.guidowb.mingming.model;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Transient;
 
 import org.springframework.core.env.Environment;
 
@@ -24,6 +27,7 @@ public class WorkerInfo {
 	private String  applicationRoute;
 	private @JsonIgnore Date lastUpdate;
 	private @JsonIgnore @ElementCollection List<String> assignedWork = new ArrayList<String>();
+	private @Transient Map<String, WorkStatus> workStatus = new HashMap<String, WorkStatus>();
 
 	public WorkerInfo() {}
 
@@ -48,5 +52,14 @@ public class WorkerInfo {
 	public void assignWork(String workId) { assignedWork.add(workId); }
 	public void unassignWork(String workId) { assignedWork.remove(workId); }
 	
+	public void reportWorkStatus(WorkStatus status) { workStatus.put(status.getWorkId(), status); }
+	public void setWorkStatus(Iterable<WorkStatus> list) {
+		if (list == null) return;
+		for (WorkStatus item : list) {
+			workStatus.put(item.getWorkId(), item);
+		}
+	}
+	public Iterable<WorkStatus> getWorkStatus() { return this.workStatus.size() == 0 ? null : this.workStatus.values(); }
+
 	public void setLastUpdate() { lastUpdate = new Date(); }
 }
