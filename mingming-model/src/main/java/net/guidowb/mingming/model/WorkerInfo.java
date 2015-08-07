@@ -27,7 +27,8 @@ public class WorkerInfo {
 	private String  applicationRoute;
 	private String  spaceId;
 	private String  spaceName;
-	private Date lastUpdate;
+	private Date    lastUpdate;
+	private Date    created;
 	private @JsonIgnore @ElementCollection List<String> assignedWork = new ArrayList<String>();
 	private @Transient Map<String, WorkStatus> workStatus = new HashMap<String, WorkStatus>();
 
@@ -42,6 +43,7 @@ public class WorkerInfo {
 	    this.instancePort = Integer.valueOf(env.getProperty("SERVER_PORT", "8080"));
 	    this.spaceId = env.getProperty("vcap.application.space_id", "unknown");
 	    this.spaceName = env.getProperty("vcap.application.space_name", "unknown");
+	    this.created = new Date();
 	}
 	
 	public String getId() { return instanceId; }
@@ -54,7 +56,10 @@ public class WorkerInfo {
 	public String getSpaceId() { return spaceId; }
 	public String getSpaceName() { return spaceName; }
 	public Date getLastUpdate() { return lastUpdate; }
-	
+	public Date getCreated() { return created; }
+	public Long secondsSinceUpdate() { return (new Date().getTime() - lastUpdate.getTime()) / 1000; }
+	public Long secondsSinceCreation() { return (new Date().getTime() - created.getTime()) / 1000; }
+
 	public Iterable<String> getAssignedWork() { return assignedWork; }
 	public void assignWork(String workId) { assignedWork.add(workId); }
 	public void unassignWork(String workId) { assignedWork.remove(workId); }
