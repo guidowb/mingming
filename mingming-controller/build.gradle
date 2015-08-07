@@ -21,5 +21,6 @@ dependencies {
     compile 'org.webjars.bower:angular-resource:1.4.3'
     compile 'org.webjars.bower:angular-cookies:1.4.3'
     compile 'org.webjars.bower:angular-filter:0.5.4'
+    compile 'org.webjars.bower:less.js:2.5.1'
     compile 'org.webjars:jquery:2.1.1'
 }
