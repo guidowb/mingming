@@ -10,33 +10,44 @@ angular.module('mingming', [ 'ngRoute', 'ngResource', 'angular.filter' ]).config
 				controller : 'workers'
 			});
 
-		}).controller('navigation', function($scope, $http, $window, $route) {
-	$scope.tab = function(route) {
-		return $route.current && route === $route.current.controller;
+}).run(function($rootScope, $window, $interval) {
+	$window.onfocus = function() {
+		if (!$rootScope.updater) return;
+		if ($rootScope.updaterPromise) return;
+		$rootScope.updater();
+		$rootScope.updaterPromise = $interval($rootScope.updater, 1000)
+		$rootScope.updating = true;
+		$rootScope.$apply();
 	};
-	if (!$scope.user) {
-		$http.get('/api/user').success(function(data) {
-			$scope.user = data;
-			$scope.authenticated = true;
-		}).error(function() {
-			$scope.authenticated = false;
-		});
+	$window.onblur = function() {
+		if ($rootScope.updaterPromise) {
+			$interval.cancel($rootScope.updaterPromise);
+			$rootScope.updaterPromise = null
+		}
+		$rootScope.updating = false;
+		$rootScope.$apply();
+	};
+	$window.focus();
+	$rootScope.updating = true;
+	$rootScope.autoUpdate = function(updater) {
+		if ($rootScope.updaterPromise) {
+			$interval.cancel($rootScope.updaterPromise);
+			$rootScope.updaterPromise = null
+		}
+		$rootScope.updater = updater;
+		if (!$rootScope.updater) return;
+		$rootScope.updater();
+		$rootScope.updaterPromise = $interval($rootScope.updater, 1000)
 	}
-	$scope.logout = function() {
-		$http.post('/api/logout', {}).success(function() {
-			delete $scope.user;
-			$scope.authenticated = false;
-			// Force reload of home page to reset all state after logout
-			$window.location.hash = '';
-		});
-	};
 }).controller('home', function() {
-}).controller('workers', function($scope, $http) {
+}).controller('workers', function($rootScope, $scope, $http) {
 
-	$http.get('/workers').success(function(data) {
-		$scope.workers = data;
-	}).error(function() {
-		$scope.workers = []
+	$rootScope.autoUpdate(function() {
+		$http.get('/workers').success(function(data) {
+			$scope.workers = data;
+		}).error(function() {
+			$scope.workers = []
+		})
 	});
 
 });
