@@ -1,10 +1,39 @@
 @color-dark-grey: #111111;
+@color-medium-grey: #333333;
+@color-light-grey: #999999;
 @color-bright-grey: #eeeeee;
 
 @theme-background: @color-dark-grey;
-@theme-foreground: @color-bright-grey;
+@panel-background: @color-medium-grey;
+
+@default-color: @color-bright-grey;
+@highlight-color: white;
+@lowlight-color: @color-light-grey;
 
 body {
 	background: @theme-background;
-	color: @theme-foreground;
+	color: @default-color;
+}
+
+div .panel {
+	background: @panel-background;
+	margin: 6px 0px;
+	padding: 4px 10px;
+}
+
+div .canary {
+	display: inline-block;
+	height: 20px;
+	width:  40px;
+	text-align: center;
+	vertical-align: middle;
+	background: green;
+	margin: 4px 6px 4px 0px;
+	padding: 2px;
+	font-size: small;
+}
+
+.minor-text {
+	font-size: small;
+	color: @lowlight-color;
 }

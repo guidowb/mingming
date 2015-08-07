@@ -15,6 +15,7 @@ import javax.persistence.Transient;
 import org.springframework.core.env.Environment;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 public class WorkerInfo {
@@ -57,8 +58,8 @@ public class WorkerInfo {
 	public String getSpaceName() { return spaceName; }
 	public Date getLastUpdate() { return lastUpdate; }
 	public Date getCreated() { return created; }
-	public Long secondsSinceUpdate() { return (new Date().getTime() - lastUpdate.getTime()) / 1000; }
-	public Long secondsSinceCreation() { return (new Date().getTime() - created.getTime()) / 1000; }
+	public @JsonProperty Long secondsSinceUpdate() { return (new Date().getTime() - lastUpdate.getTime()) / 1000; }
+	public @JsonProperty Long secondsSinceCreation() { return (new Date().getTime() - created.getTime()) / 1000; }
 
 	public Iterable<String> getAssignedWork() { return assignedWork; }
 	public void assignWork(String workId) { assignedWork.add(workId); }
