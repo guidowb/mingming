@@ -1,1 +1,17 @@
-<h2>Workers</h2><div>Workers: {{workers}}</div>
+<h2>Canaries</h2>
+
+<div>
+	<div ng-repeat="(space, members) in workers | orderBy: 'spaceName' | groupBy: 'spaceId'">
+		<div>{{space}}</div>
+		<div>{{members[0].spaceName}}</div>
+		<div ng-repeat="(application, instances) in members | groupBy: 'applicationName'">
+			<div>{{application}}</div>
+			<div>{{instances[0].applicationRoute}}</div>
+			<div ng-repeat="(host, hostInstances) in instances | groupBy: 'instanceHost'">
+				<div ng-repeat="instance in hostInstances | orderBy: ['instanceIndex','instanceId']">
+					<div>{{instance.instanceIndex}}</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

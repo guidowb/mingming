@@ -1,11 +1,11 @@
-angular.module('mingming', [ 'ngRoute', 'ngResource' ]).config(
+angular.module('mingming', [ 'ngRoute', 'ngResource', 'angular.filter' ]).config(
 		function($routeProvider) {
 
 			$routeProvider.otherwise('/');
 			$routeProvider.when('/', {
 				templateUrl : 'views/home.html',
 				controller : 'home'
-			}).when('/projects', {
+			}).when('/workers', {
 				templateUrl : 'views/workers.html',
 				controller : 'workers'
 			});
