@@ -27,10 +27,43 @@ div .canary {
 	width:  40px;
 	text-align: center;
 	vertical-align: middle;
-	background: green;
 	margin: 4px 6px 4px 0px;
 	padding: 2px;
 	font-size: small;
+
+	&.healthy-add, &.healthy-remove,
+	&.new-add, &.new-remove,
+	&.late-add, &.late-remove,
+	&.dead-add, &.dead-remove {
+		-webkit-transition: 1s linear all;
+		-moz-transition: 1s linear all;
+		-o-transition: 1s linear all;
+		transition: 1s linear all;
+	}
+	
+	&.healthy, &.healthy-add.healthy-add-active {
+		background: #00aa00;
+	}
+	
+	&.new, &.new-add.new-add-active {
+		background: #ffffff;
+	}
+	
+	&.late, &.late-add.late-add-active {
+		background: #ccaa00;
+	}
+	
+	&.dead, &.dead-add.dead-add-active {
+		background: #bb0000;
+	}
+	
+	&.gone, &.gone-add.gone-add-active {
+		opacity: 0;
+		width: 0;
+		padding: 2px 0px;
+		margin: 4px 0px;
+	}
+	
 }
 
 .minor-text {

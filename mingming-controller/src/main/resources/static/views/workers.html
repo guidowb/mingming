@@ -5,7 +5,7 @@
 		<div>{{members[0].applicationRoute}}</div>
 		<div class="minor-text">{{members[0].spaceName}}</div>
 		<div ng-repeat="(application, instances) in members | groupBy: 'applicationName'">
-			<div class="canary" ng-repeat="instance in instances | orderBy: 'instanceIndex'">
+			<div class="canary" ng-class="canaryClass(instance)" ng-repeat="instance in instances | orderBy: 'instanceIndex'">
 				{{instance.instanceIndex}}
 			</div>
 		</div>
