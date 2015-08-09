@@ -1,10 +1,12 @@
 package net.guidowb.mingming.controllers;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
 import net.guidowb.mingming.model.Work;
 import net.guidowb.mingming.model.WorkStatus;
+import net.guidowb.mingming.model.WorkerEvent;
 import net.guidowb.mingming.model.WorkerInfo;
 import net.guidowb.mingming.repositories.StatusRepository;
 import net.guidowb.mingming.repositories.WorkRepository;
@@ -35,6 +37,15 @@ public class WorkerController {
 		cal.setTime(new Date());
 		cal.add(Calendar.SECOND, -since);
 		return workerRepository.findByLastUpdateGreaterThan(cal.getTime());
+	}
+
+	@RequestMapping(value="/events", method=RequestMethod.GET)
+	public Iterable<WorkerEvent> getWorkerEvents(@RequestParam(value="since", defaultValue="0") Long since) {
+		// If no timestamp is provided, or the time period exceeds our event buffer time,
+		// we force the client to refresh the complete data set.
+		ArrayList<WorkerEvent> events = new ArrayList<WorkerEvent>();
+		events.add(new WorkerEvent.Refresh(new Date(), listWorkers(30)));
+		return events;
 	}
 
 	@RequestMapping(value="/{workerId}", method=RequestMethod.PUT)
