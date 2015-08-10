@@ -31,6 +31,7 @@ div .canary {
 	padding: 2px;
 	font-size: small;
 
+	&.ng-enter,
 	&.healthy-add, &.healthy-remove,
 	&.new-add, &.new-remove,
 	&.late-add, &.late-remove,
@@ -41,6 +42,19 @@ div .canary {
 		transition: 1s linear all;
 	}
 	
+	&.ng-enter {
+		opacity: 0;
+		width: 0;
+		padding: 2px 0px;
+		margin: 4px 0px;
+	}
+	&.ng-enter.ng-enter-active {
+		opacity: 1;
+		width: 40px;
+		margin: 4px 6px 4px 0px;
+		padding: 2px;
+	}
+
 	&.healthy, &.healthy-add.healthy-add-active {
 		background: #00aa00;
 	}
