@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+
 import net.guidowb.mingming.model.Work;
 import net.guidowb.mingming.model.WorkStatus;
 import net.guidowb.mingming.model.WorkerNotification;
@@ -12,6 +14,8 @@ import net.guidowb.mingming.repositories.StatusRepository;
 import net.guidowb.mingming.repositories.WorkRepository;
 import net.guidowb.mingming.repositories.WorkerRepository;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,6 +30,8 @@ import org.springframework.web.context.request.async.DeferredResult;
 @RequestMapping("/workers")
 public class WorkerController {
 
+	private static Logger logger = LoggerFactory.getLogger(WorkerController.class);
+
 	@Autowired private WorkerRepository workerRepository;
 	@Autowired private StatusRepository statusRepository;
 	@Autowired private WorkRepository workRepository;
@@ -37,8 +43,19 @@ public class WorkerController {
 		return workerRepository.findByInstanceStateNot("gone");
 	}
 
+	private class DeferredTimeoutHandler implements Runnable {
+		private DeferredResult<WorkerNotification> listener;
+		private DeferredTimeoutHandler(DeferredResult<WorkerNotification> listener) { this.listener = listener; }
+		@Override
+		public void run() {
+			synchronized(workerListeners) {
+				workerListeners.remove(listener);
+			}
+		}	
+	}
+
 	@RequestMapping(value="/events", method=RequestMethod.GET)
-	public DeferredResult<WorkerNotification> getWorkerEvents(@RequestParam(value="since", defaultValue="0") Long since) {
+	public DeferredResult<WorkerNotification> getWorkerEvents(@RequestParam(value="since", defaultValue="0") Long since, HttpServletRequest request) {
 		WorkerNotification result = new WorkerNotification();
 		DeferredResult<WorkerNotification> response = new DeferredResult<WorkerNotification>(30000L, result);
 		if (since < (new Date().getTime() - 60 * 1000) || since < startTime.getTime()) {
@@ -58,6 +75,7 @@ public class WorkerController {
 		else {
 			// No events queued up. We're going to defer the response until we have some.
 			synchronized(workerListeners) {
+				response.onTimeout(new DeferredTimeoutHandler(response));
 				workerListeners.add(response);
 			}
 			return response;
@@ -75,25 +93,25 @@ public class WorkerController {
 		for (WorkerInfo worker : lateWorkers) {
 			worker.setState("late");
 			changedWorkers.add(workerRepository.save(worker));
-			System.err.println("Worker " + worker.getInstanceId() + " state changed to late");
+			logger.debug("Worker " + worker.getInstanceId() + " state changed to late");
 		}
 		List<WorkerInfo> deadWorkers = workerRepository.findByLastUpdateBeforeAndInstanceState(dead, "late");
 		for (WorkerInfo worker : deadWorkers) {
 			worker.setState("dead");
 			changedWorkers.add(workerRepository.save(worker));
-			System.err.println("Worker " + worker.getInstanceId() + " state changed to dead");
+			logger.debug("Worker " + worker.getInstanceId() + " state changed to dead");
 		}
 		List<WorkerInfo> goneWorkers = workerRepository.findByLastUpdateBeforeAndInstanceState(gone, "dead");
 		for (WorkerInfo worker : goneWorkers) {
 			worker.setState("gone");
 			changedWorkers.add(workerRepository.save(worker));
-			System.err.println("Worker " + worker.getInstanceId() + " state changed to gone");
+			logger.debug("Worker " + worker.getInstanceId() + " state changed to gone");
 		}
 		if (!changedWorkers.isEmpty()) notifyListeners(changedWorkers);
 	}
 
 	public void notifyListeners(WorkerInfo worker) {
-		System.err.println("Worker " + worker.getInstanceId() + " state changed to " + worker.getInstanceState());
+		logger.debug("Worker " + worker.getInstanceId() + " state changed to " + worker.getInstanceState());
 		List<WorkerInfo> workers = new ArrayList<WorkerInfo>();
 		workers.add(worker);
 		notifyListeners(workers);
@@ -104,7 +122,7 @@ public class WorkerController {
 		notification.add(new WorkerNotification.Update(workers));
 		synchronized(workerListeners) {
 			if (!workerListeners.isEmpty()) {
-				System.err.println("Notifying " + Integer.toString(workerListeners.size()) + " listener(s)");
+				logger.debug("Notifying " + Integer.toString(workerListeners.size()) + " listener(s)");
 			}
 			for (DeferredResult<WorkerNotification> listener : workerListeners) {
 				listener.setResult(notification);
