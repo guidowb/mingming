@@ -13,6 +13,13 @@ angular.module('mingming', [ 'ngRoute', 'ngResource', 'ngAnimate', 'angular.filt
 }).controller('home', function() {
 }).controller('workers', function($rootScope, $scope, $http, $timeout, $animate) {
 
+	function workerDescription(worker) {
+		var description = worker.applicationRoute;
+		description += "[" + worker.instanceIndex + "]";
+		description += " -> " + worker.instanceState;
+		return description;
+	}
+
 	$scope.timestamp = 0;
 	$scope.backoff = 50;
 	$scope.workers=[];
@@ -31,18 +38,24 @@ angular.module('mingming', [ 'ngRoute', 'ngResource', 'ngAnimate', 'angular.filt
 					for (var i = 0; i < $scope.workers.length; i++) workerIndex[$scope.workers[i].instanceId] = i;
 					for (var w = 0; w < event.workers.length; w++) {
 						var worker = event.workers[w];
-						var workerDescription = worker.applicationRoute;
-							workerDescription += "[" + worker.instanceIndex + "]";
-							workerDescription += " -> " + worker.instanceState;
 						var index = workerIndex[worker.instanceId];
 						if (typeof index != 'undefined') {
-							console.log("update existing worker " + workerDescription);
-							for (var property in worker) $scope.workers[index][property] = worker[property];
+							if (worker.instanceState == 'gone') $scope.workers[index].instanceState = "gone";
+							else {
+								console.log("update existing worker " + workerDescription(worker));
+								for (var property in worker) $scope.workers[index][property] = worker[property];
+							}
 						}
 						else {
-							console.log("add new worker " + workerDescription);
+							console.log("add new worker " + workerDescription(worker));
 							$scope.workers.push(worker);
 							workerIndex[worker.InstanceId] = $scope.workers.length - 1;
+						}
+					}
+					for (var w = $scope.workers.length - 1; w >= 0; w--) {
+						if ($scope.workers[w].instanceState == 'gone') {
+							console.log("delete gone worker " + workerDescription($scope.workers[w]));
+							$scope.workers.splice(w, 1);
 						}
 					}
 				}
