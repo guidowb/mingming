@@ -1,7 +1,6 @@
 package net.guidowb.mingming.controllers;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -33,11 +32,8 @@ public class WorkerController {
 	private List<DeferredResult<WorkerNotification>> workerListeners = new ArrayList<DeferredResult<WorkerNotification>>();
 	
 	@RequestMapping(method=RequestMethod.GET)
-	public Iterable<WorkerInfo> listWorkers(@RequestParam(value="since", defaultValue="30") Integer since) {
-		Calendar cal = Calendar.getInstance();
-		cal.setTime(new Date());
-		cal.add(Calendar.SECOND, -since);
-		return workerRepository.findByLastUpdateAfter(cal.getTime());
+	public Iterable<WorkerInfo> listWorkers() {
+		return workerRepository.findByInstanceStateNot("gone");
 	}
 
 	@RequestMapping(value="/events", method=RequestMethod.GET)
@@ -47,7 +43,7 @@ public class WorkerController {
 		if (since < (new Date().getTime() - 60 * 1000)) {
 			// If no timestamp is provided, or the time period exceeds our event buffer time,
 			// we force the client to refresh the complete data set.
-			result.add(new WorkerNotification.Refresh(listWorkers(30)));
+			result.add(new WorkerNotification.Refresh(listWorkers()));
 			response.setResult(result);
 			return response;
 		}

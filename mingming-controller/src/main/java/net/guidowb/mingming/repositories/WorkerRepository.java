@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 @Component
 public interface WorkerRepository extends CrudRepository<WorkerInfo, String> {
 
-	public List<WorkerInfo> findByLastUpdateAfter(Date since);
+	public List<WorkerInfo> findByInstanceStateNot(String state);
 	public List<WorkerInfo> findByLastChangeAfter(Date since);
 	
 	public List<WorkerInfo> findByLastUpdateBeforeAndInstanceState(Date since, String state);
