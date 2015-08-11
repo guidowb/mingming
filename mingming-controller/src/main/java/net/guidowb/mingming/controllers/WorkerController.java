@@ -42,7 +42,7 @@ public class WorkerController {
 		WorkerNotification result = new WorkerNotification();
 		DeferredResult<WorkerNotification> response = new DeferredResult<WorkerNotification>(30000L, result);
 		if (since < (new Date().getTime() - 60 * 1000) || since < startTime.getTime()) {
-			// If no timestamp is provided, or the time period exceeds our event buffer time,
+			// If no time stamp is provided, or the time period exceeds our retention period for deleted items,
 			// or it is before our most recent start, we force the client to refresh the complete data set.
 			result.add(new WorkerNotification.Refresh(listWorkers()));
 			response.setResult(result);
