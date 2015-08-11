@@ -30,6 +30,7 @@ public class WorkerController {
 	@Autowired private StatusRepository statusRepository;
 	@Autowired private WorkRepository workRepository;
 	private List<DeferredResult<WorkerNotification>> workerListeners = new ArrayList<DeferredResult<WorkerNotification>>();
+	private final static Date startTime = new Date();
 	
 	@RequestMapping(method=RequestMethod.GET)
 	public Iterable<WorkerInfo> listWorkers() {
@@ -40,9 +41,9 @@ public class WorkerController {
 	public DeferredResult<WorkerNotification> getWorkerEvents(@RequestParam(value="since", defaultValue="0") Long since) {
 		WorkerNotification result = new WorkerNotification();
 		DeferredResult<WorkerNotification> response = new DeferredResult<WorkerNotification>(30000L, result);
-		if (since < (new Date().getTime() - 60 * 1000)) {
+		if (since < (new Date().getTime() - 60 * 1000) || since < startTime.getTime()) {
 			// If no timestamp is provided, or the time period exceeds our event buffer time,
-			// we force the client to refresh the complete data set.
+			// or it is before our most recent start, we force the client to refresh the complete data set.
 			result.add(new WorkerNotification.Refresh(listWorkers()));
 			response.setResult(result);
 			return response;
