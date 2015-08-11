@@ -1,45 +1,158 @@
 package net.guidowb.mingming.controllers;
 
-import java.util.Calendar;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
 
 import net.guidowb.mingming.model.Work;
 import net.guidowb.mingming.model.WorkStatus;
+import net.guidowb.mingming.model.WorkerNotification;
 import net.guidowb.mingming.model.WorkerInfo;
 import net.guidowb.mingming.repositories.StatusRepository;
 import net.guidowb.mingming.repositories.WorkRepository;
 import net.guidowb.mingming.repositories.WorkerRepository;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.async.DeferredResult;
 
 @RestController
 @RequestMapping("/workers")
 public class WorkerController {
 
+	private static Logger logger = LoggerFactory.getLogger(WorkerController.class);
+
 	@Autowired private WorkerRepository workerRepository;
 	@Autowired private StatusRepository statusRepository;
 	@Autowired private WorkRepository workRepository;
-
+	private List<DeferredResult<WorkerNotification>> workerListeners = new ArrayList<DeferredResult<WorkerNotification>>();
+	private final static Date startTime = new Date();
+	
 	@RequestMapping(method=RequestMethod.GET)
-	public Iterable<WorkerInfo> listWorkers(@RequestParam(value="since", defaultValue="30") Integer since) {
-		Calendar cal = Calendar.getInstance();
-		cal.setTime(new Date());
-		cal.add(Calendar.SECOND, -since);
-		return workerRepository.findByLastUpdateGreaterThan(cal.getTime());
+	public Iterable<WorkerInfo> listWorkers() {
+		return workerRepository.findByInstanceStateNot("gone");
+	}
+
+	private class DeferredTimeoutHandler implements Runnable {
+		private DeferredResult<WorkerNotification> listener;
+		private DeferredTimeoutHandler(DeferredResult<WorkerNotification> listener) { this.listener = listener; }
+		@Override
+		public void run() {
+			synchronized(workerListeners) {
+				workerListeners.remove(listener);
+			}
+		}	
+	}
+
+	@RequestMapping(value="/events", method=RequestMethod.GET)
+	public DeferredResult<WorkerNotification> getWorkerEvents(@RequestParam(value="since", defaultValue="0") Long since, HttpServletRequest request) {
+		WorkerNotification result = new WorkerNotification();
+		DeferredResult<WorkerNotification> response = new DeferredResult<WorkerNotification>(30000L, result);
+		if (since < (new Date().getTime() - 60 * 1000) || since < startTime.getTime()) {
+			// If no time stamp is provided, or the time period exceeds our retention period for deleted items,
+			// or it is before our most recent start, we force the client to refresh the complete data set.
+			result.add(new WorkerNotification.Refresh(listWorkers()));
+			response.setResult(result);
+			return response;
+		}
+		List<WorkerInfo> workers = workerRepository.findByLastChangeAfter(new Date(since));
+		if (!workers.isEmpty()) {
+			// If we had unreported changes, return them
+			result.add(new WorkerNotification.Update(workers));
+			response.setResult(result);
+			return response;
+		}
+		else {
+			// No events queued up. We're going to defer the response until we have some.
+			synchronized(workerListeners) {
+				response.onTimeout(new DeferredTimeoutHandler(response));
+				workerListeners.add(response);
+			}
+			return response;
+		}
+	}
+
+	@Scheduled(fixedDelay=1000)
+	public void checkWorkerState() {
+		Date now = new Date();
+		Date late = new Date(now.getTime() - 6 * 1000);
+		Date dead = new Date(late.getTime() - 10 * 1000);
+		Date gone = new Date(dead.getTime() - 10 * 1000);
+		List<WorkerInfo> changedWorkers = new ArrayList<WorkerInfo>();
+		List<WorkerInfo> lateWorkers = workerRepository.findByLastUpdateBeforeAndInstanceState(late, "healthy");
+		for (WorkerInfo worker : lateWorkers) {
+			worker.setState("late");
+			changedWorkers.add(workerRepository.save(worker));
+			logger.debug("Worker " + worker.getInstanceId() + " state changed to late");
+		}
+		List<WorkerInfo> deadWorkers = workerRepository.findByLastUpdateBeforeAndInstanceState(dead, "late");
+		for (WorkerInfo worker : deadWorkers) {
+			worker.setState("dead");
+			changedWorkers.add(workerRepository.save(worker));
+			logger.debug("Worker " + worker.getInstanceId() + " state changed to dead");
+		}
+		List<WorkerInfo> goneWorkers = workerRepository.findByLastUpdateBeforeAndInstanceState(gone, "dead");
+		for (WorkerInfo worker : goneWorkers) {
+			worker.setState("gone");
+			changedWorkers.add(workerRepository.save(worker));
+			logger.debug("Worker " + worker.getInstanceId() + " state changed to gone");
+		}
+		if (!changedWorkers.isEmpty()) notifyListeners(changedWorkers);
+	}
+
+	public void notifyListeners(WorkerInfo worker) {
+		logger.debug("Worker " + worker.getInstanceId() + " state changed to " + worker.getInstanceState());
+		List<WorkerInfo> workers = new ArrayList<WorkerInfo>();
+		workers.add(worker);
+		notifyListeners(workers);
+	}
+
+	public void notifyListeners(Iterable<WorkerInfo> workers) {
+		WorkerNotification notification = new WorkerNotification();
+		notification.add(new WorkerNotification.Update(workers));
+		synchronized(workerListeners) {
+			if (!workerListeners.isEmpty()) {
+				logger.debug("Notifying " + Integer.toString(workerListeners.size()) + " listener(s)");
+			}
+			for (DeferredResult<WorkerNotification> listener : workerListeners) {
+				listener.setResult(notification);
+			}
+			workerListeners.clear();
+		}
 	}
 
 	@RequestMapping(value="/{workerId}", method=RequestMethod.PUT)
 	public void updateWorker(@PathVariable String workerId, @RequestBody WorkerInfo info) {
+
+		// Validate
 		if (info.getId() == null) throw new ValidationException("workerId in request body must not be null");
 		if (!info.getId().equals(workerId)) throw new ValidationException("workerId in request body (%s) must match the one in request path (%s)", info.getId(), workerId);
+
+		// Determine if this represents a change state
+		WorkerInfo existing = workerRepository.findOne(info.getId());
+		boolean stateChange = existing == null || !existing.getInstanceState().equals("healthy");
+
+		// Update worker info
+		info.setState("healthy");
 		info.setLastUpdate();
+		if (stateChange) info.setLastChange();
+		else info.setLastChange(existing.getLastChange());
 		workerRepository.save(info);
+
+		// Notify listeners if state changed
+		if (stateChange) notifyListeners(info);
+
+		// Update work status
 		Iterable<WorkStatus> workStatusList = info.getWorkStatus();
 		if (workStatusList == null) return;
 		for (WorkStatus workStatus : workStatusList) {

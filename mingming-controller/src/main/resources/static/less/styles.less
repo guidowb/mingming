@@ -1,10 +1,86 @@
 @color-dark-grey: #111111;
+@color-medium-grey: #333333;
+@color-light-grey: #999999;
 @color-bright-grey: #eeeeee;
 
 @theme-background: @color-dark-grey;
-@theme-foreground: @color-bright-grey;
+@panel-background: @color-medium-grey;
+
+@default-color: @color-bright-grey;
+@highlight-color: white;
+@lowlight-color: @color-light-grey;
 
 body {
 	background: @theme-background;
-	color: @theme-foreground;
+	color: @default-color;
+}
+
+div .panel {
+	background: @panel-background;
+	margin: 6px 0px;
+	padding: 4px 10px;
+}
+
+div .canary {
+	display: inline-block;
+	height: 20px;
+	width:  40px;
+	text-align: center;
+	vertical-align: middle;
+	margin: 4px 6px 4px 0px;
+	padding: 2px;
+	font-size: small;
+
+	&.ng-enter, &.ng-leave,
+	&.healthy-add, &.healthy-remove,
+	&.new-add, &.new-remove,
+	&.late-add, &.late-remove,
+	&.dead-add, &.dead-remove {
+		-webkit-transition: 1s linear all;
+		-moz-transition: 1s linear all;
+		-o-transition: 1s linear all;
+		transition: 1s linear all;
+	}
+	
+	&.ng-enter {
+		opacity: 0;
+		width: 0;
+		padding: 2px 0px;
+		margin: 4px 0px;
+	}
+	&.ng-enter.ng-enter-active {
+		opacity: 1;
+		width: 40px;
+		margin: 4px 6px 4px 0px;
+		padding: 2px;
+	}
+
+	&.healthy, &.healthy-add.healthy-add-active {
+		background: #00aa00;
+	}
+	
+	&.new, &.new-add.new-add-active {
+		background: #ffffff;
+	}
+	
+	&.late, &.late-add.late-add-active {
+		background: #ccaa00;
+	}
+	
+	&.dead, &.dead-add.dead-add-active {
+		background: #bb0000;
+	}
+	
+	&.ng-leave.ng-leave-active {
+		opacity: 0;
+		width: 0;
+		padding: 2px 0px;
+		margin: 4px 0px;
+	}
+	
+}
+
+.minor-text {
+	font-size: small;
+	color: @lowlight-color;
 }

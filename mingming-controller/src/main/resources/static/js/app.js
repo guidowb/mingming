@@ -1,4 +1,4 @@
-angular.module('mingming', [ 'ngRoute', 'ngResource', 'angular.filter' ]).config(
+angular.module('mingming', [ 'ngRoute', 'ngResource', 'ngAnimate', 'angular.filter' ]).config(
 		function($routeProvider) {
 
 			$routeProvider.otherwise('/');
@@ -10,33 +10,64 @@ angular.module('mingming', [ 'ngRoute', 'ngResource', 'angular.filter' ]).config
 				controller : 'workers'
 			});
 
-		}).controller('navigation', function($scope, $http, $window, $route) {
-	$scope.tab = function(route) {
-		return $route.current && route === $route.current.controller;
-	};
-	if (!$scope.user) {
-		$http.get('/api/user').success(function(data) {
-			$scope.user = data;
-			$scope.authenticated = true;
+}).controller('home', function() {
+}).controller('workers', function($rootScope, $scope, $http, $timeout, $animate) {
+
+	function workerDescription(worker) {
+		var description = worker.applicationRoute;
+		description += "[" + worker.instanceIndex + "]";
+		description += " -> " + worker.instanceState;
+		return description;
+	}
+
+	$scope.timestamp = 0;
+	$scope.backoff = 50;
+	$scope.workers=[];
+	$scope.listen = function() {
+		$http.get('/workers/events?since=' + $scope.timestamp).success(function(notification) {
+			$scope.backoff = 50;
+			$scope.timestamp = notification.timestamp;
+			for (var e = 0; e < notification.events.length; e++) {
+				var event = notification.events[e];
+				if (event.eventType == "refresh") {
+					console.log("refresh");
+					$scope.workers = event.workers;
+				}
+				else if (event.eventType == "update") {
+					var workerIndex = {};
+					for (var i = 0; i < $scope.workers.length; i++) workerIndex[$scope.workers[i].instanceId] = i;
+					for (var w = 0; w < event.workers.length; w++) {
+						var worker = event.workers[w];
+						var index = workerIndex[worker.instanceId];
+						if (typeof index != 'undefined') {
+							if (worker.instanceState == 'gone') $scope.workers[index].instanceState = "gone";
+							else {
+								console.log("update existing worker " + workerDescription(worker));
+								for (var property in worker) $scope.workers[index][property] = worker[property];
+							}
+						}
+						else {
+							console.log("add new worker " + workerDescription(worker));
+							$scope.workers.push(worker);
+							workerIndex[worker.InstanceId] = $scope.workers.length - 1;
+						}
+					}
+					for (var w = $scope.workers.length - 1; w >= 0; w--) {
+						if ($scope.workers[w].instanceState == 'gone') {
+							console.log("delete gone worker " + workerDescription($scope.workers[w]));
+							$scope.workers.splice(w, 1);
+						}
+					}
+				}
+			}
+			$scope.listen();
 		}).error(function() {
-			$scope.authenticated = false;
+			if ($scope.backoff < 20000) $scope.backoff = $scope.backoff * 2;
+			$timeout($scope.listen, $scope.backoff);
 		});
 	}
-	$scope.logout = function() {
-		$http.post('/api/logout', {}).success(function() {
-			delete $scope.user;
-			$scope.authenticated = false;
-			// Force reload of home page to reset all state after logout
-			$window.location.hash = '';
-		});
-	};
-}).controller('home', function() {
-}).controller('workers', function($scope, $http) {
-
-	$http.get('/workers').success(function(data) {
-		$scope.workers = data;
-	}).error(function() {
-		$scope.workers = []
-	});
-
+	$scope.canaryClass = function(canary) {
+		return canary.instanceState;
+	}
+	$scope.listen();
 });
