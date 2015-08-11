@@ -14,7 +14,6 @@ import net.guidowb.mingming.repositories.WorkRepository;
 import net.guidowb.mingming.repositories.WorkerRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -31,12 +30,10 @@ public class WorkerController {
 	@Autowired private WorkerRepository workerRepository;
 	@Autowired private StatusRepository statusRepository;
 	@Autowired private WorkRepository workRepository;
-	@Autowired private Environment env;
 	private List<DeferredResult<WorkerNotification>> workerListeners = new ArrayList<DeferredResult<WorkerNotification>>();
 	
 	@RequestMapping(method=RequestMethod.GET)
 	public Iterable<WorkerInfo> listWorkers(@RequestParam(value="since", defaultValue="30") Integer since) {
-		if (env.containsProperty("FAKEWORKERS")) return FakeWorkers.getWorkers();
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(new Date());
 		cal.add(Calendar.SECOND, -since);
@@ -126,16 +123,19 @@ public class WorkerController {
 		if (info.getId() == null) throw new ValidationException("workerId in request body must not be null");
 		if (!info.getId().equals(workerId)) throw new ValidationException("workerId in request body (%s) must match the one in request path (%s)", info.getId(), workerId);
 
+		// Determine if this represents a change state
+		WorkerInfo existing = workerRepository.findOne(info.getId());
+		boolean stateChange = existing == null || !existing.getInstanceState().equals("healthy");
+
 		// Update worker info
 		info.setState("healthy");
 		info.setLastUpdate();
-		WorkerInfo existing = workerRepository.findOne(info.getId());
-		if (existing == null) info.setLastChange();
+		if (stateChange) info.setLastChange();
 		else info.setLastChange(existing.getLastChange());
 		workerRepository.save(info);
 
 		// Notify listeners if state changed
-		if (existing == null || !existing.getInstanceState().equals("healthy")) notifyListeners(info);
+		if (stateChange) notifyListeners(info);
 
 		// Update work status
 		Iterable<WorkStatus> workStatusList = info.getWorkStatus();

@@ -23,6 +23,7 @@ angular.module('mingming', [ 'ngRoute', 'ngResource', 'ngAnimate', 'angular.filt
 			for (var e = 0; e < notification.events.length; e++) {
 				var event = notification.events[e];
 				if (event.eventType == "refresh") {
+					console.log("refresh");
 					$scope.workers = event.workers;
 				}
 				else if (event.eventType == "update") {
@@ -30,11 +31,16 @@ angular.module('mingming', [ 'ngRoute', 'ngResource', 'ngAnimate', 'angular.filt
 					for (var i = 0; i < $scope.workers.length; i++) workerIndex[$scope.workers[i].instanceId] = i;
 					for (var w = 0; w < event.workers.length; w++) {
 						var worker = event.workers[w];
+						var workerDescription = worker.applicationRoute;
+							workerDescription += "[" + worker.instanceIndex + "]";
+							workerDescription += " -> " + worker.instanceState;
 						var index = workerIndex[worker.instanceId];
 						if (typeof index != 'undefined') {
+							console.log("update existing worker " + workerDescription);
 							for (var property in worker) $scope.workers[index][property] = worker[property];
 						}
 						else {
+							console.log("add new worker " + workerDescription);
 							$scope.workers.push(worker);
 							workerIndex[worker.InstanceId] = $scope.workers.length - 1;
 						}
