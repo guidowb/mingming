@@ -31,7 +31,7 @@ subprojects {
     }
 }
 
-project(':mingming-worker') {
+project(':mingming-canary') {
     dependencies {
         compile project(':mingming-model')
     }

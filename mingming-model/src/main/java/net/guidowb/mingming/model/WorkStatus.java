@@ -26,14 +26,14 @@ public abstract class WorkStatus {
 		private static final long serialVersionUID = 1L;
 		private Date timestamp;
 		private String workId;
-		private String workerId;
+		private String canaryId;
 		
 		@ForSerializationOnly
 		private Key() {}
 
-		public Key(String workId, String workerId, Date timestamp) {
+		public Key(String workId, String canaryId, Date timestamp) {
 			this.workId = workId;
-			this.workerId = workerId;
+			this.canaryId = canaryId;
 			this.timestamp = timestamp;
 		}
 	}
@@ -43,12 +43,12 @@ public abstract class WorkStatus {
 
 	public Date getTimestamp() { return this.key.timestamp; }
 	public String getWorkId() { return this.key.workId; }
-	public String getWorkerId() { return this.key.workerId; }
+	public String getCanaryId() { return this.key.canaryId; }
 
 	public void setTimestamp() { setTimestamp(new Date()); }
 	public void setTimestamp(Date timestamp) { this.key.timestamp = timestamp; }
 	public void setWorkId(String workId) { this.key.workId = workId; }
-	public void setWorkerId(String workerId) { this.key.workerId = workerId; }
+	public void setCanaryId(String canaryId) { this.key.canaryId = canaryId; }
 
 	@ForSerializationOnly
 	protected WorkStatus() { this.key = new Key(); }

@@ -13,7 +13,7 @@ import net.guidowb.mingming.model.ForSerializationOnly;
 import net.guidowb.mingming.model.Schedule;
 import net.guidowb.mingming.model.Work;
 import net.guidowb.mingming.model.WorkStatus;
-import net.guidowb.mingming.model.WorkerInfo;
+import net.guidowb.mingming.model.CanaryInfo;
 
 @Entity
 public class Ping extends Work {
@@ -56,7 +56,7 @@ public class Ping extends Work {
 		}
 		try {
 			Long start = System.nanoTime();
-			WorkerInfo responder = restTemplate.getForObject(url, WorkerInfo.class);
+			CanaryInfo responder = restTemplate.getForObject(url, CanaryInfo.class);
 			Long end = System.nanoTime();
 			Long elapsed = end - start;
 			recordSuccess(responder, elapsed);
@@ -66,7 +66,7 @@ public class Ping extends Work {
 		}
 	}
 
-	private void recordSuccess(WorkerInfo responder, Long elapsed) {
+	private void recordSuccess(CanaryInfo responder, Long elapsed) {
 		Date now = new Date();
 		status.numSuccesses++;
 		status.lastAttempted = now;

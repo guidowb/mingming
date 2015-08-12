@@ -7,36 +7,36 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class WorkerPool {
+public class CanaryPool {
 	
 	private String controllerUrl;
-	private ArrayList<Process> workers = new ArrayList<Process>();
-	private File workerJar = null;
+	private ArrayList<Process> canaries = new ArrayList<Process>();
+	private File canaryJar = null;
 
-	public WorkerPool(String controllerUrl) {
+	public CanaryPool(String controllerUrl) {
 		this.controllerUrl = controllerUrl;
 	}
 
 	public void shutdown() {
-		while (!workers.isEmpty()) stopWorker();
+		while (!canaries.isEmpty()) stopCanary();
 	}
 
 	public void start(int count) {
-		while (workers.size() < count) startWorker();
-		while (workers.size() > count) stopWorker();
+		while (canaries.size() < count) startCanary();
+		while (canaries.size() > count) stopCanary();
 	}
 
-	private void stopWorker() {
-		Process worker = workers.remove(0);
-		worker.destroyForcibly();
+	private void stopCanary() {
+		Process canary = canaries.remove(0);
+		canary.destroyForcibly();
 	}
 
-	private void startWorker() {
+	private void startCanary() {
 		Map<String, String> env = new HashMap<String, String>();
 		env.put("CONTROLLER", controllerUrl);
-		if (workerJar == null) workerJar = buildJarFile("mingming-worker");
-		Process worker = fork(workerJar, env);
-		workers.add(worker);
+		if (canaryJar == null) canaryJar = buildJarFile("mingming-canary");
+		Process canary = fork(canaryJar, env);
+		canaries.add(canary);
 	}
 
 	private static File findProject(String projectName) {

@@ -10,60 +10,56 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.mock.env.MockEnvironment;
 import org.springframework.web.client.RestTemplate;
 
-import net.guidowb.mingming.model.WorkerInfo;
+import net.guidowb.mingming.model.CanaryInfo;
 
-public class DisconnectingWorkers {
+public class ReliableCanaries {
 
 	private int count;
-	private int timer = 0;
-	private List<WorkerInfo> workers = null;
+	private List<CanaryInfo> canaries = null;
 	private ScheduledExecutorService updatePool = Executors.newScheduledThreadPool(1);
 	private RestTemplate controller = new RestTemplate();
 	private URI controllerURI;
 
-	private DisconnectingWorkers(URI controller, int count) {
+	private ReliableCanaries(URI controller, int count) {
 		this.controllerURI = controller;
 		this.count = count;
 	}
 
 	private void start() {
-		workers = new ArrayList<WorkerInfo>();
+		canaries = new ArrayList<CanaryInfo>();
 		for (int index = 0; index < count; index++) {
-			workers.add(createWorker(index));
+			canaries.add(createCanary(index));
 		}
 		updatePool.scheduleAtFixedRate(new Runnable() {
 
 			@Override
-			public void run() { updateWorkers(); }
+			public void run() { updateCanaries(); }
 			
-		}, 3, 5, TimeUnit.SECONDS);
+		}, 1, 5, TimeUnit.SECONDS);
 	}
 
-	private WorkerInfo createWorker(int instance) {
+	private CanaryInfo createCanary(int instance) {
 		MockEnvironment env = new MockEnvironment()
 				.withProperty("vcap.application.uris[0]", "Fake Canaries")
 				.withProperty("vcap.application.space_name", "dynamic test data set")
-				.withProperty("vcap.application.application_name", "disconnecting-canary")
+				.withProperty("vcap.application.application_name", "reliable-canary")
 				.withProperty("vcap.application.instance_index", Integer.toString(instance));
-		WorkerInfo worker = new WorkerInfo(env);
-		return worker;
+		CanaryInfo canary = new CanaryInfo(env);
+		canary.setLastUpdate();
+		return canary;
 	}
 
-	private synchronized void updateWorkers() {
-		if (timer < 16) {
-			for (WorkerInfo worker : workers) {
-				URI workerURI = controllerURI.resolve("/workers/").resolve(worker.getId());
-				worker.setLastUpdate();
-				try { controller.put(workerURI, worker); }
-				catch (Throwable t) {}
-			}
+	private synchronized void updateCanaries() {
+		for (CanaryInfo canary : canaries) {
+			URI canaryURI = controllerURI.resolve("/canaries/").resolve(canary.getId());
+			try { controller.put(canaryURI, canary); }
+			catch (Throwable t) {}
 		}
-		timer = (timer + 5) % 60;
 	}
 	
 	public static void create(URI controller, Integer count) {
 		if (count == null) count = 10;
-		DisconnectingWorkers fakeWorkers = new DisconnectingWorkers(controller, count);
-		fakeWorkers.start();
+		ReliableCanaries fakeCanaries = new ReliableCanaries(controller, count);
+		fakeCanaries.start();
 	}
 }
