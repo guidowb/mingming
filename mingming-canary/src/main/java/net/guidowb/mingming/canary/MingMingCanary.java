@@ -1,4 +1,4 @@
-package net.guidowb.mingming.worker;
+package net.guidowb.mingming.canary;
 
 import java.net.URI;
 import java.util.HashMap;
@@ -18,42 +18,42 @@ import org.springframework.web.client.RestTemplate;
 import net.guidowb.mingming.model.StatusReportingService;
 import net.guidowb.mingming.model.Work;
 import net.guidowb.mingming.model.WorkStatus;
-import net.guidowb.mingming.model.WorkerInfo;
+import net.guidowb.mingming.model.CanaryInfo;
 
 @SpringBootApplication
-public class MingMingWorker implements CommandLineRunner, StatusReportingService {
+public class MingMingCanary implements CommandLineRunner, StatusReportingService {
 
 	private URI controllerUri;
-	private URI workerUri;
-	private WorkerInfo workerInfo;
+	private URI canaryUri;
+	private CanaryInfo canaryInfo;
 	private Map<String, Work> activeWork = new HashMap<String, Work>();
-	private @Autowired Environment workerEnvironment;
+	private @Autowired Environment canaryEnvironment;
 	private ScheduledExecutorService updatePool = Executors.newScheduledThreadPool(1);
-	private ScheduledExecutorService workerPool = Executors.newScheduledThreadPool(10);
+	private ScheduledExecutorService canaryPool = Executors.newScheduledThreadPool(10);
 	private RestTemplate controller = new RestTemplate();
 
-	public String getId() { return workerInfo.getInstanceId(); }
+	public String getId() { return canaryInfo.getInstanceId(); }
 
 	public static void main(String[] args) {
-        SpringApplication.run(MingMingWorker.class, args);
+        SpringApplication.run(MingMingCanary.class, args);
     }
 
 	public void run(String... args) {
-		this.controllerUri = URI.create(workerEnvironment.getProperty("CONTROLLER"));
-		this.workerInfo = new WorkerInfo(workerEnvironment);
-		this.workerUri = controllerUri.resolve("/workers/").resolve(workerInfo.getId());
+		this.controllerUri = URI.create(canaryEnvironment.getProperty("CONTROLLER"));
+		this.canaryInfo = new CanaryInfo(canaryEnvironment);
+		this.canaryUri = controllerUri.resolve("/canaries/").resolve(canaryInfo.getId());
 		startUpdates();
 	}
 	
 	private void downloadInstructions() {
-		Work[] newWork = controller.getForObject(workerUri + "/work", Work[].class);
+		Work[] newWork = controller.getForObject(canaryUri + "/work", Work[].class);
 		Set<String> unreferencedWork = activeWork.keySet();
 
 		for (Work work : newWork) {
 			unreferencedWork.remove(work.getId());
 			if (activeWork.containsKey(work.getId())) continue;
 			activeWork.put(work.getId(), work);
-			work.schedule(workerPool, this);
+			work.schedule(canaryPool, this);
 		}
 		
 		for (String toDelete : unreferencedWork) {
@@ -67,12 +67,12 @@ public class MingMingWorker implements CommandLineRunner, StatusReportingService
 	@Override
 	public void reportStatus(WorkStatus status) {
 		status.setTimestamp();
-		status.setWorkerId(workerInfo.getId());
-		workerInfo.reportWorkStatus(status);
+		status.setCanaryId(canaryInfo.getId());
+		canaryInfo.reportWorkStatus(status);
 	}
 
 	private void uploadStatus() {
-		controller.put(workerUri, workerInfo);
+		controller.put(canaryUri, canaryInfo);
 	} 
 
 	private Throwable updateFailure = null;

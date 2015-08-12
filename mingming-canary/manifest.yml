@@ -1,0 +1,9 @@
+---
+applications:
+- name: mingming-canary
+  path: build/libs/mingming-canary-0.0.1-SNAPSHOT.jar
+  memory: 512M
+  host: mingming-canary
+  timeout: 120
+  env:
+    CONTROLLER: http://mingming.guidowb.net

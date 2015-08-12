@@ -17,7 +17,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
-public class WorkerInfo {
+public class CanaryInfo {
 
 	private @Id String instanceId;
 	private String  instanceHost;
@@ -34,9 +34,9 @@ public class WorkerInfo {
 	private @JsonIgnore @ElementCollection List<String> assignedWork = new ArrayList<String>();
 	private @Transient Map<String, WorkStatus> workStatus = new HashMap<String, WorkStatus>();
 
-	public WorkerInfo() {}
+	public CanaryInfo() {}
 
-	public WorkerInfo(Environment env) {
+	public CanaryInfo(Environment env) {
 	    this.instanceId = env.getProperty("vcap.application.instance_id", UUID.randomUUID().toString());
 	    this.applicationName = env.getProperty("vcap.application.application_name", "unknown");
 	    this.instanceIndex = Integer.valueOf(env.getProperty("vcap.application.instance_index", "0"));
@@ -46,6 +46,7 @@ public class WorkerInfo {
 	    this.spaceId = env.getProperty("vcap.application.space_id", "unknown");
 	    this.spaceName = env.getProperty("vcap.application.space_name", "unknown");
 	    this.created = new Date();
+	    this.lastUpdate = new Date();
 	    this.instanceState = "healthy";
 	}
 	

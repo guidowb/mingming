@@ -1,9 +1,0 @@
----
-applications:
-- name: mingming-worker
-  path: build/libs/mingming-worker-0.0.1-SNAPSHOT.jar
-  memory: 512M
-  host: mingming-worker
-  timeout: 120
-  env:
-    CONTROLLER: http://mingming.guidowb.net

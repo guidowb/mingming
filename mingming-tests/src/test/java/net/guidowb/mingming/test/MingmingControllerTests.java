@@ -12,7 +12,7 @@ import net.guidowb.mingming.model.ScheduleOnce;
 import net.guidowb.mingming.model.ScheduleRepeat;
 import net.guidowb.mingming.model.Work;
 import net.guidowb.mingming.model.WorkStatus;
-import net.guidowb.mingming.model.WorkerInfo;
+import net.guidowb.mingming.model.CanaryInfo;
 import net.guidowb.mingming.work.Ping;
 import net.guidowb.mingming.work.Ping.PingStatus;
 
@@ -50,10 +50,10 @@ public class MingmingControllerTests {
 	public void contextLoads() {
 	}
 
-	private static AtomicInteger workerIndex = new AtomicInteger();
+	private static AtomicInteger canaryIndex = new AtomicInteger();
 
-	private WorkerInfo createWorker() {
-		Integer expectedIndex = workerIndex.getAndIncrement();
+	private CanaryInfo createCanary() {
+		Integer expectedIndex = canaryIndex.getAndIncrement();
 		String expectedId = "id-" + Integer.toString(expectedIndex);
 		String expectedName = "expected-name-" + Integer.toString(expectedIndex);
 		String expectedURI = "http://expected-uri-" + Integer.toString(expectedIndex);
@@ -66,34 +66,34 @@ public class MingmingControllerTests {
 			.withProperty("vcap.application.uris[0]", expectedURI)
 			.withProperty("CF_INSTANCE_IP", expectedIP)
 			.withProperty("SERVER_PORT", Integer.toString(expectedPort));
-		WorkerInfo worker = new WorkerInfo(env);
-		return worker;
+		CanaryInfo canary = new CanaryInfo(env);
+		return canary;
 	}
 
-	private String postWorker(WorkerInfo worker) {
-		client.put(serverURI + "/workers/" + worker.getId(), worker);
-		return worker.getId();
+	private String postCanary(CanaryInfo canary) {
+		client.put(serverURI + "/canaries/" + canary.getId(), canary);
+		return canary.getId();
 	}
 
 	@Test
-	public void registerWorkerReturnsCorrectId() {
-		WorkerInfo worker = createWorker();
-		String id = postWorker(worker);
-		assertEquals(worker.getId(), id);
+	public void registerCanaryReturnsCorrectId() {
+		CanaryInfo canary = createCanary();
+		String id = postCanary(canary);
+		assertEquals(canary.getId(), id);
 	}
 	
 	@Test
-	public void getWorkerReturnsCorrectProperties() {
-		WorkerInfo workerIn = createWorker();
-		String id = postWorker(workerIn);
-		WorkerInfo workerOut = client.getForObject(serverURI + "/workers/" + id, WorkerInfo.class);
-		assertEquals(workerIn.getId(), workerOut.getId());
-		assertEquals(workerIn.getApplicationName(), workerOut.getApplicationName());
-		assertEquals(workerIn.getApplicationRoute(), workerOut.getApplicationRoute());
-		assertEquals(workerIn.getInstanceId(), workerOut.getInstanceId());
-		assertEquals(workerIn.getInstanceIndex(), workerOut.getInstanceIndex());
-		assertEquals(workerIn.getInstanceHost(), workerOut.getInstanceHost());
-		assertEquals(workerIn.getInstancePort(), workerOut.getInstancePort());
+	public void getCanaryReturnsCorrectProperties() {
+		CanaryInfo canaryIn = createCanary();
+		String id = postCanary(canaryIn);
+		CanaryInfo canaryOut = client.getForObject(serverURI + "/canaries/" + id, CanaryInfo.class);
+		assertEquals(canaryIn.getId(), canaryOut.getId());
+		assertEquals(canaryIn.getApplicationName(), canaryOut.getApplicationName());
+		assertEquals(canaryIn.getApplicationRoute(), canaryOut.getApplicationRoute());
+		assertEquals(canaryIn.getInstanceId(), canaryOut.getInstanceId());
+		assertEquals(canaryIn.getInstanceIndex(), canaryOut.getInstanceIndex());
+		assertEquals(canaryIn.getInstanceHost(), canaryOut.getInstanceHost());
+		assertEquals(canaryIn.getInstancePort(), canaryOut.getInstancePort());
 	}
 
 	private Ping createPing() { return createPing(null); }
@@ -102,9 +102,9 @@ public class MingmingControllerTests {
 		return ping;
 	}
 
-	private PingStatus createPingStatus(WorkerInfo worker) {
+	private PingStatus createPingStatus(CanaryInfo canary) {
 		PingStatus status = new PingStatus();
-		status.setWorkerId(worker.getId());
+		status.setCanaryId(canary.getId());
 		status.setWorkId(postWork(createPing()));
 		status.setTimestamp();
 		return status;
@@ -150,75 +150,75 @@ public class MingmingControllerTests {
 
 	@Test
 	public void assignedWorkIsIgnoredOnPost() {
-		WorkerInfo workerIn = createWorker();
-		workerIn.assignWork("non-existent-work-1");
-		workerIn.assignWork("non-existent-work-2");
-		workerIn.assignWork("non-existent-work-3");
-		String id = postWorker(workerIn);
-		Work[] assignedWork = client.getForObject(serverURI + "/workers/" + id + "/work", Work[].class);
+		CanaryInfo canaryIn = createCanary();
+		canaryIn.assignWork("non-existent-work-1");
+		canaryIn.assignWork("non-existent-work-2");
+		canaryIn.assignWork("non-existent-work-3");
+		String id = postCanary(canaryIn);
+		Work[] assignedWork = client.getForObject(serverURI + "/canaries/" + id + "/work", Work[].class);
 		assertEquals(0, assignedWork.length);
 	}
 
 	@Test
 	public void assignedWorkIsIgnoredInJson() {
-		WorkerInfo workerIn = createWorker();
-		String workerId = postWorker(workerIn);
+		CanaryInfo canaryIn = createCanary();
+		String canaryId = postCanary(canaryIn);
 		String work1 = postWork(createPing());
 		String work2 = postWork(createPing());
 		String work3 = postWork(createPing());
-		client.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work1, null);
-		client.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work2, null);
-		client.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work3, null);
-		WorkerInfo workerOut = client.getForObject(serverURI + "/workers/" + workerId, WorkerInfo.class);
-		assertFalse(workerOut.getAssignedWork().iterator().hasNext());
+		client.postForLocation(serverURI + "/canaries/" + canaryId + "/work/" + work1, null);
+		client.postForLocation(serverURI + "/canaries/" + canaryId + "/work/" + work2, null);
+		client.postForLocation(serverURI + "/canaries/" + canaryId + "/work/" + work3, null);
+		CanaryInfo canaryOut = client.getForObject(serverURI + "/canaries/" + canaryId, CanaryInfo.class);
+		assertFalse(canaryOut.getAssignedWork().iterator().hasNext());
 	}
 
 	@Test
 	public void assignedWorkIsReturned() {
-		WorkerInfo workerIn = createWorker();
-		String workerId = postWorker(workerIn);
+		CanaryInfo canaryIn = createCanary();
+		String canaryId = postCanary(canaryIn);
 		String work1 = postWork(createPing());
 		String work2 = postWork(createPing());
 		String work3 = postWork(createPing());
-		client.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work1, null);
-		client.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work2, null);
-		client.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work3, null);
-		Work[] assignedWork = client.getForObject(serverURI + "/workers/" + workerId + "/work", Work[].class);
+		client.postForLocation(serverURI + "/canaries/" + canaryId + "/work/" + work1, null);
+		client.postForLocation(serverURI + "/canaries/" + canaryId + "/work/" + work2, null);
+		client.postForLocation(serverURI + "/canaries/" + canaryId + "/work/" + work3, null);
+		Work[] assignedWork = client.getForObject(serverURI + "/canaries/" + canaryId + "/work", Work[].class);
 		assertEquals(3, assignedWork.length);
 	}
 	
 	@Test
 	public void unassignedWorkIsRemoved() {
-		WorkerInfo workerIn = createWorker();
-		String workerId = postWorker(workerIn);
+		CanaryInfo canaryIn = createCanary();
+		String canaryId = postCanary(canaryIn);
 		String work1 = postWork(createPing());
 		String work2 = postWork(createPing());
 		String work3 = postWork(createPing());
-		client.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work1, null);
-		client.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work2, null);
-		client.postForLocation(serverURI + "/workers/" + workerId + "/work/" + work3, null);
-		client.delete(serverURI + "/workers/" + workerId + "/work/" + work2);
-		Work[] assignedWork = client.getForObject(serverURI + "/workers/" + workerId + "/work", Work[].class);
+		client.postForLocation(serverURI + "/canaries/" + canaryId + "/work/" + work1, null);
+		client.postForLocation(serverURI + "/canaries/" + canaryId + "/work/" + work2, null);
+		client.postForLocation(serverURI + "/canaries/" + canaryId + "/work/" + work3, null);
+		client.delete(serverURI + "/canaries/" + canaryId + "/work/" + work2);
+		Work[] assignedWork = client.getForObject(serverURI + "/canaries/" + canaryId + "/work", Work[].class);
 		assertEquals(2, assignedWork.length);
 	}
 	
 	@Test
 	public void reportStatus() {
-		WorkerInfo workerIn = createWorker();
-		workerIn.reportWorkStatus(createPingStatus(workerIn));
-		workerIn.reportWorkStatus(createPingStatus(workerIn));
-		workerIn.reportWorkStatus(createPingStatus(workerIn));
-		postWorker(workerIn);
+		CanaryInfo canaryIn = createCanary();
+		canaryIn.reportWorkStatus(createPingStatus(canaryIn));
+		canaryIn.reportWorkStatus(createPingStatus(canaryIn));
+		canaryIn.reportWorkStatus(createPingStatus(canaryIn));
+		postCanary(canaryIn);
 	}
 	
 	@Test
 	public void statusIsPersisted() {
-		WorkerInfo workerIn = createWorker();
-		workerIn.reportWorkStatus(createPingStatus(workerIn));
-		workerIn.reportWorkStatus(createPingStatus(workerIn));
-		workerIn.reportWorkStatus(createPingStatus(workerIn));
-		String workerId = postWorker(workerIn);
-		WorkStatus[] stati = client.getForObject(serverURI + "/workers/" + workerId + "/status", WorkStatus[].class);
+		CanaryInfo canaryIn = createCanary();
+		canaryIn.reportWorkStatus(createPingStatus(canaryIn));
+		canaryIn.reportWorkStatus(createPingStatus(canaryIn));
+		canaryIn.reportWorkStatus(createPingStatus(canaryIn));
+		String canaryId = postCanary(canaryIn);
+		WorkStatus[] stati = client.getForObject(serverURI + "/canaries/" + canaryId + "/status", WorkStatus[].class);
 		assertEquals(3, stati.length);
 	}
 }

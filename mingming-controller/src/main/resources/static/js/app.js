@@ -1,61 +1,57 @@
 angular.module('mingming', [ 'ngRoute', 'ngResource', 'ngAnimate', 'angular.filter' ]).config(
 		function($routeProvider) {
 
-			$routeProvider.otherwise('/');
-			$routeProvider.when('/', {
-				templateUrl : 'views/home.html',
-				controller : 'home'
-			}).when('/workers', {
-				templateUrl : 'views/workers.html',
-				controller : 'workers'
+			$routeProvider.otherwise('/canaries');
+			$routeProvider.when('/canaries', {
+				templateUrl : 'views/canaries.html',
+				controller : 'canaries'
 			});
 
-}).controller('home', function() {
-}).controller('workers', function($rootScope, $scope, $http, $timeout, $animate) {
+}).controller('canaries', function($rootScope, $scope, $http, $timeout, $animate) {
 
-	function workerDescription(worker) {
-		var description = worker.applicationRoute;
-		description += "[" + worker.instanceIndex + "]";
-		description += " -> " + worker.instanceState;
+	function canaryDescription(canary) {
+		var description = canary.applicationRoute;
+		description += "[" + canary.instanceIndex + "]";
+		description += " -> " + canary.instanceState;
 		return description;
 	}
 
 	$scope.timestamp = 0;
 	$scope.backoff = 50;
-	$scope.workers=[];
+	$scope.canaries=[];
 	$scope.listen = function() {
-		$http.get('/workers/events?since=' + $scope.timestamp).success(function(notification) {
+		$http.get('/canaries/events?since=' + $scope.timestamp).success(function(notification) {
 			$scope.backoff = 50;
 			$scope.timestamp = notification.timestamp;
 			for (var e = 0; e < notification.events.length; e++) {
 				var event = notification.events[e];
 				if (event.eventType == "refresh") {
 					console.log("refresh");
-					$scope.workers = event.workers;
+					$scope.canaries = event.canaries;
 				}
 				else if (event.eventType == "update") {
-					var workerIndex = {};
-					for (var i = 0; i < $scope.workers.length; i++) workerIndex[$scope.workers[i].instanceId] = i;
-					for (var w = 0; w < event.workers.length; w++) {
-						var worker = event.workers[w];
-						var index = workerIndex[worker.instanceId];
+					var canaryIndex = {};
+					for (var i = 0; i < $scope.canaries.length; i++) canaryIndex[$scope.canaries[i].instanceId] = i;
+					for (var w = 0; w < event.canaries.length; w++) {
+						var canary = event.canaries[w];
+						var index = canaryIndex[canary.instanceId];
 						if (typeof index != 'undefined') {
-							if (worker.instanceState == 'gone') $scope.workers[index].instanceState = "gone";
+							if (canary.instanceState == 'gone') $scope.canaries[index].instanceState = "gone";
 							else {
-								console.log("update existing worker " + workerDescription(worker));
-								for (var property in worker) $scope.workers[index][property] = worker[property];
+								console.log("update existing canary " + canaryDescription(canary));
+								for (var property in canary) $scope.canaries[index][property] = canary[property];
 							}
 						}
 						else {
-							console.log("add new worker " + workerDescription(worker));
-							$scope.workers.push(worker);
-							workerIndex[worker.InstanceId] = $scope.workers.length - 1;
+							console.log("add new canary " + canaryDescription(canary));
+							$scope.canaries.push(canary);
+							canaryIndex[canary.InstanceId] = $scope.canaries.length - 1;
 						}
 					}
-					for (var w = $scope.workers.length - 1; w >= 0; w--) {
-						if ($scope.workers[w].instanceState == 'gone') {
-							console.log("delete gone worker " + workerDescription($scope.workers[w]));
-							$scope.workers.splice(w, 1);
+					for (var w = $scope.canaries.length - 1; w >= 0; w--) {
+						if ($scope.canaries[w].instanceState == 'gone') {
+							console.log("delete gone canary " + canaryDescription($scope.canaries[w]));
+							$scope.canaries.splice(w, 1);
 						}
 					}
 				}

@@ -8,6 +8,6 @@ import org.springframework.stereotype.Component;
 @Component
 public interface StatusRepository extends CrudRepository<WorkStatus, WorkStatus.Key>, StatusRepositoryExtension {
 
-	public Iterable<WorkStatus> findByKeyWorkerId(String workerId);
-	public Iterable<WorkStatus> findByKeyWorkId(String workerId);
+	public Iterable<WorkStatus> findByKeyCanaryId(String canaryId);
+	public Iterable<WorkStatus> findByKeyWorkId(String workId);
 }

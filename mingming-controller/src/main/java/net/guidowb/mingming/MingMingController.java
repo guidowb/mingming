@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import net.guidowb.mingming.fakes.FakeWorkers;
+import net.guidowb.mingming.fakes.FakeCanaries;
 
 @SpringBootApplication
 @EnableScheduling
@@ -21,6 +21,6 @@ public class MingMingController implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		FakeWorkers.start(env);
+		FakeCanaries.start(env);
 	}
 }

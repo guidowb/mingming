@@ -5,8 +5,7 @@ import static org.junit.Assert.*;
 import java.net.URI;
 
 import net.guidowb.mingming.MingMingController;
-import net.guidowb.mingming.model.WorkerInfo;
-
+import net.guidowb.mingming.model.CanaryInfo;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,25 +21,25 @@ import org.springframework.web.client.RestTemplate;
 @SpringApplicationConfiguration(classes = MingMingController.class)
 @WebAppConfiguration
 @IntegrationTest("server.port:0")
-public class MingmingWorkerTests {
+public class MingmingCanaryTests {
 
 	@Value("${local.server.port}")
 	int port;
 
 	private URI serverURI;
 	RestTemplate client;
-	private static WorkerPool workerPool = null;
+	private static CanaryPool canaryPool = null;
 
 	@Before
 	public void setup() {
 		serverURI = URI.create("http://localhost:" + Integer.toString(port));
-		if (workerPool == null) workerPool = new WorkerPool(serverURI.toString());
+		if (canaryPool == null) canaryPool = new CanaryPool(serverURI.toString());
 		client = new RestTemplate();
 	}
 
 	@AfterClass
 	public static void teardown() {
-		if (workerPool != null) workerPool.shutdown();
+		if (canaryPool != null) canaryPool.shutdown();
 	}
 
 	@Test
@@ -48,19 +47,19 @@ public class MingmingWorkerTests {
 	}
 
 	@Test
-	public void workerStarts() {
-		workerPool.start(1);
+	public void canaryStarts() {
+		canaryPool.start(1);
 		sleep(11);
-		WorkerInfo[] workers = client.getForObject(serverURI + "/workers?since=10", WorkerInfo[].class);
-		assertEquals(1, workers.length);
+		CanaryInfo[] canaries = client.getForObject(serverURI + "/canaries?state=healthy", CanaryInfo[].class);
+		assertEquals(1, canaries.length);
 	}
 	
 	@Test
-	public void multipleWorkersStart() {
-		workerPool.start(3);
+	public void multipleCanariesStart() {
+		canaryPool.start(3);
 		sleep(16);
-		WorkerInfo[] workers = client.getForObject(serverURI + "/workers?since=10", WorkerInfo[].class);
-		assertEquals(3, workers.length);
+		CanaryInfo[] canaries = client.getForObject(serverURI + "/canaries?state=healthy", CanaryInfo[].class);
+		assertEquals(3, canaries.length);
 	}
 
 	private void sleep(int seconds) {
