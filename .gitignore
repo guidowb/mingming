@@ -1,4 +1,5 @@
 bin/
+logs/
 build/
 gradle/
 .classpath
