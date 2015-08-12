@@ -31,11 +31,7 @@ div .canary {
 	padding: 2px;
 	font-size: small;
 
-	&.ng-enter, &.ng-leave,
-	&.healthy-add, &.healthy-remove,
-	&.new-add, &.new-remove,
-	&.late-add, &.late-remove,
-	&.dead-add, &.dead-remove {
+	&.animate {
 		-webkit-transition: 1s linear all;
 		-moz-transition: 1s linear all;
 		-o-transition: 1s linear all;
@@ -71,7 +67,7 @@ div .canary {
 		background: #bb0000;
 	}
 	
-	&.ng-leave.ng-leave-active {
+	&.gone, &.gone-add.gone-add-active, &.ng-leave.ng-leave-active {
 		opacity: 0;
 		width: 0;
 		padding: 2px 0px;

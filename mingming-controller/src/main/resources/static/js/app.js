@@ -23,6 +23,7 @@ angular.module('mingming', [ 'ngRoute', 'ngResource', 'ngAnimate', 'angular.filt
 		$http.get('/canaries/events?since=' + $scope.timestamp).success(function(notification) {
 			$scope.backoff = 50;
 			$scope.timestamp = notification.timestamp;
+			var timestamp = Date.now();
 			for (var e = 0; e < notification.events.length; e++) {
 				var event = notification.events[e];
 				if (event.eventType == "refresh") {
@@ -34,13 +35,11 @@ angular.module('mingming', [ 'ngRoute', 'ngResource', 'ngAnimate', 'angular.filt
 					for (var i = 0; i < $scope.canaries.length; i++) canaryIndex[$scope.canaries[i].instanceId] = i;
 					for (var w = 0; w < event.canaries.length; w++) {
 						var canary = event.canaries[w];
+						canary.received = timestamp;
 						var index = canaryIndex[canary.instanceId];
 						if (typeof index != 'undefined') {
-							if (canary.instanceState == 'gone') $scope.canaries[index].instanceState = "gone";
-							else {
-								console.log("update existing canary " + canaryDescription(canary));
-								for (var property in canary) $scope.canaries[index][property] = canary[property];
-							}
+							console.log("update existing canary " + canaryDescription(canary));
+							for (var property in canary) $scope.canaries[index][property] = canary[property];
 						}
 						else {
 							console.log("add new canary " + canaryDescription(canary));
@@ -48,12 +47,16 @@ angular.module('mingming', [ 'ngRoute', 'ngResource', 'ngAnimate', 'angular.filt
 							canaryIndex[canary.InstanceId] = $scope.canaries.length - 1;
 						}
 					}
-					for (var w = $scope.canaries.length - 1; w >= 0; w--) {
-						if ($scope.canaries[w].instanceState == 'gone') {
-							console.log("delete gone canary " + canaryDescription($scope.canaries[w]));
-							$scope.canaries.splice(w, 1);
+					$timeout(function() {
+						var timestamp = Date.now();
+						for (var w = $scope.canaries.length - 1; w >= 0; w--) {
+							var canary = $scope.canaries[w];
+							if (canary.instanceState == 'gone' && (timestamp - canary.received) > 2000) {
+								console.log("delete gone canary " + canaryDescription($scope.canaries[w]));
+								$scope.canaries.splice(w, 1);
+							}
 						}
-					}
+					}, 2000);
 				}
 			}
 			$scope.listen();
@@ -63,7 +66,9 @@ angular.module('mingming', [ 'ngRoute', 'ngResource', 'ngAnimate', 'angular.filt
 		});
 	}
 	$scope.canaryClass = function(canary) {
-		return canary.instanceState;
+		var classes = [ canary.instanceState ];
+		if ((Date.now() - canary.received) < 2000) classes.push('animate');
+		return classes;
 	}
 	$scope.listen();
 });
