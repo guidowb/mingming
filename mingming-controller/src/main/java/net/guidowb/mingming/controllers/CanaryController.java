@@ -110,18 +110,18 @@ public class CanaryController {
 			changedCanaries.add(canaryRepository.save(canary));
 			logger.debug("Canary " + canary.getInstanceId() + " state changed to gone");
 		}
-		if (!changedCanaries.isEmpty()) notifyListeners(changedCanaries);
+		if (!changedCanaries.isEmpty()) notifyListeners(now, changedCanaries);
 	}
 
 	public void notifyListeners(CanaryInfo canary) {
 		logger.debug("Canary " + canary.getInstanceId() + " state changed to " + canary.getInstanceState());
 		List<CanaryInfo> canaries = new ArrayList<CanaryInfo>();
 		canaries.add(canary);
-		notifyListeners(canaries);
+		notifyListeners(canary.getLastChange(), canaries);
 	}
 
-	public void notifyListeners(Iterable<CanaryInfo> canaries) {
-		CanaryNotification notification = new CanaryNotification();
+	public void notifyListeners(Date timestamp, Iterable<CanaryInfo> canaries) {
+		CanaryNotification notification = new CanaryNotification(timestamp);
 		notification.add(new CanaryNotification.Update(canaries));
 		synchronized(canaryListeners) {
 			if (!canaryListeners.isEmpty()) {

@@ -18,9 +18,8 @@ public class CanaryNotification {
 
 	public void add(WorkerEvent event) { events.add(event); }
 
-	public CanaryNotification() {
-		this.timestamp = new Date();
-	}
+	public CanaryNotification() { this.timestamp = new Date(); }
+	public CanaryNotification(Date timestamp) { this.timestamp = timestamp; }
 
 	@JsonTypeInfo(use=JsonTypeInfo.Id.NAME, include=JsonTypeInfo.As.PROPERTY, property="class")
 	@JsonSubTypes({
