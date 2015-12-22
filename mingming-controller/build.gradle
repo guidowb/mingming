@@ -7,11 +7,18 @@ jar {
 }
 
 dependencies {
+
+	// Spring Boot
     compile("org.springframework.boot:spring-boot-starter")
     compile("org.springframework.boot:spring-boot-starter-web")
     compile("org.springframework.boot:spring-boot-starter-actuator")
     compile("org.springframework.boot:spring-boot-starter-data-jpa")
-    compile("org.springframework.boot:spring-boot-starter-test") 
+    compile("org.springframework.boot:spring-boot-starter-test")
+
+	// Cloud Foundry
+    compile("org.cloudfoundry:cloudfoundry-client-lib:1.1.2")
+
+	// In-Memory DB as the last resort
     runtime("com.h2database:h2")
 
     // Webjars
