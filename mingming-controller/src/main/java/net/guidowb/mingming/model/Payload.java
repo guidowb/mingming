@@ -16,15 +16,15 @@ public class Payload {
 	public static class Key implements Serializable {
 		private static final long serialVersionUID = 1L;
 		private String deploymentName;
-		private String canaryType;
+		private String payloadType;
 		private Integer canaryInstance;
 		
 		@ForSerializationOnly
 		private Key() {}
 
-		public Key(String deploymentName, String canaryType, Integer canaryInstance) {
+		public Key(String deploymentName, String payloadType, Integer canaryInstance) {
 			this.deploymentName = deploymentName;
-			this.canaryType = canaryType;
+			this.payloadType = payloadType;
 			this.canaryInstance = canaryInstance;
 		}
 	}
@@ -36,14 +36,14 @@ public class Payload {
 
 	public Date getTimestamp() { return this.timestamp; }
 	public String getDeploymentName() { return this.key.deploymentName; }
-	public String getCanaryType() { return this.key.canaryType; }
+	public String getPayloadType() { return this.key.payloadType; }
 	public Integer getCanaryInstance() { return this.key.canaryInstance; }
 	public String getPayload() { return payload; }
 
 	public void setTimestamp() { setTimestamp(new Date()); }
 	public void setTimestamp(Date timestamp) { this.timestamp = timestamp; }
 	public void setDeploymentName(String deploymentName) { this.key.deploymentName = deploymentName; }
-	public void setCanaryType(String canaryType) { this.key.canaryType = canaryType; }
+	public void setPayloadType(String payloadType) { this.key.payloadType = payloadType; }
 	public void setCanaryInstance(Integer canaryInstance) { this.key.canaryInstance = canaryInstance; }
 	public void setPayload(String payload) { this.payload = payload; }
 

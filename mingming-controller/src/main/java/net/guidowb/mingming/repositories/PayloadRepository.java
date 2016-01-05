@@ -8,5 +8,5 @@ import org.springframework.stereotype.Component;
 @Component
 public interface PayloadRepository extends CrudRepository<Payload, Payload.Key>, StatusRepositoryExtension {
 
-	public Iterable<Payload> findByKeyCanaryType(String canaryType);
+	public Iterable<Payload> findByKeyPayloadType(String payloadType);
 }

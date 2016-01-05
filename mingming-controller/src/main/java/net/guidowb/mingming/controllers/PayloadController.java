@@ -17,8 +17,8 @@ public class PayloadController {
 	@Autowired private PayloadRepository payloadRepository;
 	
 	@RequestMapping(method=RequestMethod.GET)
-	public Iterable<Payload> getPayloads(@RequestParam(value="canaryType") String canaryType) {
-		return payloadRepository.findByKeyCanaryType(canaryType);
+	public Iterable<Payload> getPayloads(@RequestParam(value="payloadType") String payloadType) {
+		return payloadRepository.findByKeyPayloadType(payloadType);
 	}
 
 	@RequestMapping(method=RequestMethod.POST)
@@ -26,7 +26,7 @@ public class PayloadController {
 
 		// Validate
 		if (payload.getDeploymentName() == null) throw new ValidationException("deploymentName in request body must not be null");
-		if (payload.getCanaryType()     == null) throw new ValidationException("canaryType in request body must not be null");
+		if (payload.getPayloadType()    == null) throw new ValidationException("payloadType in request body must not be null");
 		if (payload.getCanaryInstance() == null) throw new ValidationException("canaryInstance in request body must not be null");
 
 		// Save
