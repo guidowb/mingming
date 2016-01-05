@@ -6,6 +6,7 @@ import java.util.Date;
 import javax.persistence.Embeddable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.Lob;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -32,6 +33,7 @@ public class Payload {
 	@EmbeddedId @JsonIgnore
 	private Key key;
 	private Date timestamp;
+	@Lob
 	private String payload;
 
 	public Date getTimestamp() { return this.timestamp; }
