@@ -1,12 +1,22 @@
 angular.module('mingming', [ 'ngRoute', 'ngResource', 'ngAnimate', 'angular.filter' ]).config(
-		function($routeProvider) {
+	function($routeProvider) {
 
-			$routeProvider.otherwise('/canaries');
-			$routeProvider.when('/canaries', {
-				templateUrl : 'views/canaries.html',
-				controller : 'canaries'
-			});
-
+		$routeProvider.otherwise('/canaries');
+		$routeProvider.when('/canaries', {
+			templateUrl : 'views/canaries.html',
+			controller : 'canaries'
+		});
+		$routeProvider.when('/configuration', {
+			templateUrl : 'views/configuration.html',
+			controller : 'configuration'
+		});
+	}
+).controller('navigation', function($location, $scope) {
+	$scope.currentPage = "Canaries";
+	$scope.go = function(page) {
+		$scope.currentPage = page;
+		$location.path('/' + page.toLowerCase());
+	};
 }).controller('canaries', function($rootScope, $scope, $http, $timeout, $animate) {
 
 	function canaryDescription(canary) {
@@ -16,6 +26,7 @@ angular.module('mingming', [ 'ngRoute', 'ngResource', 'ngAnimate', 'angular.filt
 		return description;
 	}
 
+	$rootScope.label = 'Canaries';
 	$scope.timestamp = 0;
 	$scope.backoff = 50;
 	$scope.canaries=[];
@@ -71,4 +82,7 @@ angular.module('mingming', [ 'ngRoute', 'ngResource', 'ngAnimate', 'angular.filt
 		return classes;
 	}
 	$scope.listen();
+}).controller('configuration', function($rootScope, $scope, $http, $timeout, $animate) {
+
+	$rootScope.label = 'Configuration';
 });

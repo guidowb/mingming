@@ -1,0 +1,8 @@
+---
+applications:
+- name: canary-java
+  path: build/libs/canary-0.1.0.jar
+  memory: 512M
+  env:
+    CONTROLLER: ${CONTROLLER}
+    DEPLOYMENT: ${DEPLOYMENT}
