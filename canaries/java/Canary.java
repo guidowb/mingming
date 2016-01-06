@@ -31,22 +31,26 @@ public class Canary implements CommandLineRunner {
 	}
 
 	public class Payload {
-		public String deploymentName;
-		public String payloadType;
+		public String  deploymentName;
+		public String  payloadType;
 		public Integer canaryInstance;
-		public String payload;
+		public String  payload;
 
 		public Payload(String payloadType, Object payload) {
 			try { 
-				ObjectMapper mapper = new ObjectMapper();
-				HashMap<String, Object> vcap_application = mapper.readValue(System.getenv("VCAP_APPLICATION"), new TypeReference<Map<String, Object>>(){});
-				ArrayList<String> application_uris = (ArrayList<String>) vcap_application.get("uris");
-				this.deploymentName = application_uris.get(0);
-				this.canaryInstance = Integer.valueOf(vcap_application.get("instance_index").toString());
+				this.deploymentName = getenv("DEPLOYMENT", "local");
+				this.canaryInstance = Integer.valueOf(getenv("CF_INSTANCE_INDEX", "0"));
 				this.payloadType = payloadType;
 				this.payload = new ObjectMapper().writeValueAsString(payload);
 			}
 			catch (Exception ex) { throw new RuntimeException(ex); }
+		}
+		
+		private String getenv(String key) { return getenv(key, null); }
+		private String getenv(String key, String defaultValue) {
+			String value = System.getenv(key);
+			if (value == null) value = defaultValue;
+			return value;
 		}
 	}
 }

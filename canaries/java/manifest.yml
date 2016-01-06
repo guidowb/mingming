@@ -5,3 +5,4 @@ applications:
   memory: 512M
   env:
     CONTROLLER: ${CONTROLLER}
+    DEPLOYMENT: ${DEPLOYMENT}
